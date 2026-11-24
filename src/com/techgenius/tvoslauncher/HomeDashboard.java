@@ -57,79 +57,44 @@ import java.util.concurrent.Executors;
  * Default Home Dashboard displayed when no application is selected, when focus is on
  * non-app elements (Settings, More, top bar), or when the focused app has no Continue Watching items.
  *
- * Displays 4 customizable Liquid Glass widgets in one horizontal row:
- *  1. Prayer Times: Daily prayer schedule and live countdown to the next prayer.
- *  2. Football Matches: Upcoming matches, live scores, and favorite teams.
- *  3. Latest Releases: Recently released movies and TV series from streaming platforms.
- *  4. Weather: Current conditions and forecast.
+ * Displays customizable Liquid Glass widgets in one horizontal row: Sources (the TV's HDMI
+ * inputs as quick picks), Weather, Football Matches, Live News, Latest Releases and Top Media.
  */
 public final class HomeDashboard {
 
     private static final String PREF = "home_dashboard_prefs";
     private static final String KEY_ENABLED = "dashboard_enabled";
     private static final String KEY_SHOW_WHEN_NO_CW = "show_when_no_cw";
-    private static final String KEY_W_PRAYER = "widget_prayer";
+    private static final String KEY_W_SOURCES = "widget_sources";
     private static final String KEY_W_FOOTBALL = "widget_football";
     private static final String KEY_W_RELEASES = "widget_releases";
     private static final String KEY_W_WEATHER = "widget_weather";
-    private static final String KEY_W_CRICKET = "widget_cricket";
     private static final String KEY_W_NEWS = "widget_news";
     private static final String KEY_W_TOP_MEDIA = "widget_top_media";
     private static final String KEY_WIDGET_ORDER = "widget_order";
+    private static final String KEY_SOURCES_FIRST = "widget_sources_first_v1";
     private static final String KEY_ALL_DEFAULT_V2 = "widgets_all_default_v2";
 
-    public static final String WIDGET_PRAYER = "prayer";
+    public static final String WIDGET_SOURCES = "sources";
     public static final String WIDGET_FOOTBALL = "football";
     public static final String WIDGET_RELEASES = "releases";
     public static final String WIDGET_WEATHER = "weather";
-    public static final String WIDGET_CRICKET = "cricket";
     public static final String WIDGET_NEWS = "news";
     public static final String WIDGET_TOP_MEDIA = "top_media";
 
     public static final String[] DEFAULT_WIDGET_IDS = {
-        WIDGET_PRAYER, WIDGET_FOOTBALL, WIDGET_RELEASES, WIDGET_WEATHER,
-        WIDGET_CRICKET, WIDGET_NEWS, WIDGET_TOP_MEDIA
+        WIDGET_SOURCES, WIDGET_WEATHER, WIDGET_FOOTBALL, WIDGET_NEWS, WIDGET_RELEASES, WIDGET_TOP_MEDIA
     };
 
     private static volatile String sMovingWidgetId = null;
 
-    private static final String KEY_PRAYER_METHOD = "prayer_method"; // Default 13 (Diyanet / Turkey & region)
-    private static final String KEY_PRAYER_LOC_AUTO = "prayer_loc_auto";
-    private static final String KEY_PRAYER_LOC_NAME = "prayer_loc_name";
-    private static final String KEY_PRAYER_LOC_LAT = "prayer_loc_lat";
-    private static final String KEY_PRAYER_LOC_LON = "prayer_loc_lon";
-    private static final String KEY_PRAYER_CACHE_JSON = "prayer_cache_json";
-    private static final String KEY_PRAYER_CACHE_DAY = "prayer_cache_day";
-    private static final String KEY_PRAYER_CACHE_CITY = "prayer_cache_city";
-
-    /** Popular quick-pick cities for Prayer Times: { "City, Country", "lat", "lon" }. */
-    public static final String[][] PRAYER_POPULAR_CITIES = {
-        {"Istanbul, Turkey", "41.0082", "28.9784"},
-        {"Ankara, Turkey", "39.9334", "32.8597"},
-        {"Izmir, Turkey", "38.4237", "27.1428"},
-        {"Baku, Azerbaijan", "40.4093", "49.8671"},
-        {"Mecca, Saudi Arabia", "21.3891", "39.8579"},
-        {"Medina, Saudi Arabia", "24.5247", "39.5692"},
-        {"Riyadh, Saudi Arabia", "24.7136", "46.6753"},
-        {"Dubai, UAE", "25.2048", "55.2708"},
-        {"Cairo, Egypt", "30.0444", "31.2357"},
-        {"London, United Kingdom", "51.5074", "-0.1278"},
-        {"Berlin, Germany", "52.5200", "13.4050"},
-        {"Paris, France", "48.8566", "2.3522"},
-        {"New York, United States", "40.7128", "-74.0060"},
-        {"Toronto, Canada", "43.6532", "-79.3832"},
-        {"Jakarta, Indonesia", "-6.2088", "106.8456"},
-        {"Kuala Lumpur, Malaysia", "3.1390", "101.6869"},
-        {"Karachi, Pakistan", "24.8607", "67.0011"},
-        {"Dhaka, Bangladesh", "23.8103", "90.4125"},
-        {"Sarajevo, Bosnia", "43.8563", "18.4131"},
-        {"S\u00e3o Paulo, Brazil", "-23.5505", "-46.6333"}
-    };
 
     private static final String KEY_FAV_TEAMS = "football_fav_teams";
+    private static final String KEY_FAV_TEAMS_EU = "football_fav_teams_eu_v1";
     private static final String KEY_FOOTBALL_LEAGUE = "football_league";
-    private static final String KEY_FOOTBALL_CACHE_JSON = "football_cache_json";
-    private static final String KEY_FOOTBALL_CACHE_TS = "football_cache_ts";
+    private static final String KEY_FOOTBALL_LEAGUE_EU = "football_league_eu_v3";
+    private static final String KEY_FOOTBALL_CACHE_JSON = "football_cache_json_eu2";
+    private static final String KEY_FOOTBALL_CACHE_TS = "football_cache_ts_eu2";
 
     private static final String KEY_RELEASES_AUTO = "releases_countries_auto";
     private static final String KEY_RELEASES_SET = "releases_countries_set";
@@ -142,8 +107,6 @@ public final class HomeDashboard {
      * Supported countries for Latest Releases widget: { ISO-3166 alpha-2 code, Display Name, UI language code }.
      */
     public static final String[][] RELEASES_COUNTRIES = {
-        {"TR", "Türkiye (Turkey)", "tr"},
-        {"AZ", "Azərbaycan (Azerbaijan)", "az"},
         {"US", "United States", "en"},
         {"GB", "United Kingdom", "en"},
         {"DE", "Deutschland (Germany)", "de"},
@@ -152,12 +115,7 @@ public final class HomeDashboard {
         {"IT", "Italia (Italy)", "it"},
         {"PT", "Portugal", "pt"},
         {"BR", "Brasil (Brazil)", "pt"},
-        {"RU", "Россия (Russia)", "ru"},
-        {"SA", "السعودية (Saudi Arabia)", "ar"},
-        {"EG", "مصر (Egypt)", "ar"},
-        {"IN", "India", "en"},
-        {"KR", "South Korea", "en"},
-        {"JP", "Japan", "en"}
+        {"RU", "Россия (Russia)", "ru"}
     };
 
     /**
@@ -168,7 +126,6 @@ public final class HomeDashboard {
         {"GB", "\uD83C\uDDEC\uD83C\uDDE7  United Kingdom", "en-GB", "GB:en"},
         {"CA", "\uD83C\uDDE8\uD83C\uDDE6  Canada", "en-CA", "CA:en"},
         {"AU", "\uD83C\uDDE6\uD83C\uDDFA  Australia", "en-AU", "AU:en"},
-        {"TR", "\uD83C\uDDF9\uD83C\uDDF7  Türkiye (Turkey)", "tr", "TR:tr"},
         {"BR", "\uD83C\uDDE7\uD83C\uDDF7  Brasil (Brazil)", "pt-BR", "BR:pt-419"},
         {"PT", "\uD83C\uDDF5\uD83C\uDDF9  Portugal", "pt-PT", "PT:pt-150"},
         {"DE", "\uD83C\uDDE9\uD83C\uDDEA  Deutschland (Germany)", "de", "DE:de"},
@@ -178,16 +135,7 @@ public final class HomeDashboard {
         {"IT", "\uD83C\uDDEE\uD83C\uDDF9  Italia (Italy)", "it", "IT:it"},
         {"RU", "\uD83C\uDDF7\uD83C\uDDFA  Россия (Russia)", "ru", "RU:ru"},
         {"PL", "\uD83C\uDDF5\uD83C\uDDF1  Polska (Poland)", "pl", "PL:pl"},
-        {"SE", "\uD83C\uDDF8\uD83C\uDDEA  Sverige (Sweden)", "sv", "SE:sv"},
-        {"IN", "\uD83C\uDDEE\uD83C\uDDF3  India", "en-IN", "IN:en"},
-        {"AZ", "\uD83C\uDDE6\uD83C\uDDFF  Azərbaycan (Azerbaijan)", "az", "AZ:az"},
-        {"SA", "\uD83C\uDDF8\uD83C\uDDE6  السعودية (Saudi Arabia)", "ar", "SA:ar"},
-        {"EG", "\uD83C\uDDEA\uD83C\uDDEC  مصر (Egypt)", "ar", "EG:ar"},
-        {"IL", "\uD83C\uDDEE\uD83C\uDDF1  ישראל (Israel)", "he", "IL:he"},
-        {"JP", "\uD83C\uDDEF\uD83C\uDDF5  日本 (Japan)", "ja", "JP:ja"},
-        {"KR", "\uD83C\uDDF0\uD83C\uDDF7  대한민국 (South Korea)", "ko", "KR:ko"},
-        {"TW", "\uD83C\uDDF9\uD83C\uDDFC  台灣 (Taiwan)", "zh-TW", "TW:zh-Hant"},
-        {"CN", "\uD83C\uDDE8\uD83C\uDDF3  中国 (China)", "zh-CN", "CN:zh-Hans"}
+        {"SE", "\uD83C\uDDF8\uD83C\uDDEA  Sverige (Sweden)", "sv", "SE:sv"}
     };
 
     private static final ExecutorService EXEC = Executors.newFixedThreadPool(3);
@@ -200,10 +148,15 @@ public final class HomeDashboard {
         if (!sp.getBoolean(KEY_ALL_DEFAULT_V2, false)) {
             sp.edit()
                     .putBoolean(KEY_ALL_DEFAULT_V2, true)
-                    .putBoolean(KEY_W_CRICKET, true)
                     .putBoolean(KEY_W_NEWS, true)
                     .putBoolean(KEY_W_TOP_MEDIA, true)
                     .apply();
+        }
+        // Once: the old date-range fetch showed nothing, so a league picked while trying to make it
+        // work is likely not wanted; start again from every European competition.
+        if (!sp.getBoolean(KEY_FOOTBALL_LEAGUE_EU, false)) {
+            sp.edit().putString(KEY_FOOTBALL_LEAGUE, "all").putBoolean(KEY_FOOTBALL_LEAGUE_EU, true)
+                    .remove(KEY_FOOTBALL_CACHE_JSON).putLong(KEY_FOOTBALL_CACHE_TS, 0L).apply();
         }
         return sp;
     }
@@ -224,12 +177,12 @@ public final class HomeDashboard {
         prefs(c).edit().putBoolean(KEY_SHOW_WHEN_NO_CW, en).apply();
     }
 
-    public static boolean isWidgetPrayerEnabled(Context c) {
-        return prefs(c).getBoolean(KEY_W_PRAYER, true);
+    public static boolean isWidgetSourcesEnabled(Context c) {
+        return prefs(c).getBoolean(KEY_W_SOURCES, true);
     }
 
-    public static void setWidgetPrayerEnabled(Context c, boolean en) {
-        prefs(c).edit().putBoolean(KEY_W_PRAYER, en).apply();
+    public static void setWidgetSourcesEnabled(Context c, boolean en) {
+        prefs(c).edit().putBoolean(KEY_W_SOURCES, en).apply();
     }
 
     public static boolean isWidgetFootballEnabled(Context c) {
@@ -256,14 +209,6 @@ public final class HomeDashboard {
         prefs(c).edit().putBoolean(KEY_W_WEATHER, en).apply();
     }
 
-    public static boolean isWidgetCricketEnabled(Context c) {
-        return prefs(c).getBoolean(KEY_W_CRICKET, true);
-    }
-
-    public static void setWidgetCricketEnabled(Context c, boolean en) {
-        prefs(c).edit().putBoolean(KEY_W_CRICKET, en).apply();
-    }
-
     public static boolean isWidgetNewsEnabled(Context c) {
         return prefs(c).getBoolean(KEY_W_NEWS, true);
     }
@@ -281,7 +226,17 @@ public final class HomeDashboard {
     }
 
     public static List<String> getWidgetOrder(Context c) {
-        String raw = prefs(c).getString(KEY_WIDGET_ORDER, "");
+        SharedPreferences sp = prefs(c);
+        // Once: a saved order predates the Sources card, which would land last; put it first.
+        if (!sp.getBoolean(KEY_SOURCES_FIRST, false)) {
+            String saved = sp.getString(KEY_WIDGET_ORDER, "");
+            SharedPreferences.Editor e = sp.edit().putBoolean(KEY_SOURCES_FIRST, true);
+            if (saved != null && !saved.isEmpty() && !saved.contains(WIDGET_SOURCES)) {
+                e.putString(KEY_WIDGET_ORDER, WIDGET_SOURCES + "," + saved);
+            }
+            e.apply();
+        }
+        String raw = sp.getString(KEY_WIDGET_ORDER, "");
         List<String> out = new ArrayList<String>();
         if (raw != null && !raw.isEmpty()) {
             for (String part : raw.split(",")) {
@@ -320,43 +275,39 @@ public final class HomeDashboard {
     }
 
     public static boolean isWidgetEnabledById(Context c, String id) {
-        if (WIDGET_PRAYER.equals(id)) return isWidgetPrayerEnabled(c);
+        if (WIDGET_SOURCES.equals(id)) return isWidgetSourcesEnabled(c);
         if (WIDGET_FOOTBALL.equals(id)) return isWidgetFootballEnabled(c);
         if (WIDGET_RELEASES.equals(id)) return isWidgetReleasesEnabled(c);
         if (WIDGET_WEATHER.equals(id)) return isWidgetWeatherEnabled(c);
-        if (WIDGET_CRICKET.equals(id)) return isWidgetCricketEnabled(c);
         if (WIDGET_NEWS.equals(id)) return isWidgetNewsEnabled(c);
         if (WIDGET_TOP_MEDIA.equals(id)) return isWidgetTopMediaEnabled(c);
         return false;
     }
 
     public static void setWidgetEnabledById(Context c, String id, boolean en) {
-        if (WIDGET_PRAYER.equals(id)) setWidgetPrayerEnabled(c, en);
+        if (WIDGET_SOURCES.equals(id)) setWidgetSourcesEnabled(c, en);
         else if (WIDGET_FOOTBALL.equals(id)) setWidgetFootballEnabled(c, en);
         else if (WIDGET_RELEASES.equals(id)) setWidgetReleasesEnabled(c, en);
         else if (WIDGET_WEATHER.equals(id)) setWidgetWeatherEnabled(c, en);
-        else if (WIDGET_CRICKET.equals(id)) setWidgetCricketEnabled(c, en);
         else if (WIDGET_NEWS.equals(id)) setWidgetNewsEnabled(c, en);
         else if (WIDGET_TOP_MEDIA.equals(id)) setWidgetTopMediaEnabled(c, en);
     }
 
     public static String getWidgetTitleById(Context c, String id) {
-        if (WIDGET_PRAYER.equals(id)) return I18n.t(c, "dash_prayer_times");
+        if (WIDGET_SOURCES.equals(id)) return I18n.t(c, "dash_sources");
         if (WIDGET_FOOTBALL.equals(id)) return I18n.t(c, "dash_football");
         if (WIDGET_RELEASES.equals(id)) return I18n.t(c, "dash_latest_releases");
         if (WIDGET_WEATHER.equals(id)) return I18n.t(c, "weather");
-        if (WIDGET_CRICKET.equals(id)) return I18n.t(c, "dash_cricket");
         if (WIDGET_NEWS.equals(id)) return I18n.t(c, "dash_news");
         if (WIDGET_TOP_MEDIA.equals(id)) return I18n.t(c, "dash_top_media");
         return id;
     }
 
     public static String getWidgetEmojiById(String id) {
-        if (WIDGET_PRAYER.equals(id)) return "🕌  ";
+        if (WIDGET_SOURCES.equals(id)) return "🎮  ";
         if (WIDGET_FOOTBALL.equals(id)) return "⚽  ";
         if (WIDGET_RELEASES.equals(id)) return "🎬  ";
         if (WIDGET_WEATHER.equals(id)) return "⛅  ";
-        if (WIDGET_CRICKET.equals(id)) return "🏏  ";
         if (WIDGET_NEWS.equals(id)) return "📰  ";
         if (WIDGET_TOP_MEDIA.equals(id)) return "🎥  ";
         return "";
@@ -427,11 +378,10 @@ public final class HomeDashboard {
     }
 
     public static boolean hasAnyWidgetEnabled(Context c) {
-        return isEnabled(c) && (isWidgetPrayerEnabled(c)
+        return isEnabled(c) && (isWidgetSourcesEnabled(c)
                 || isWidgetFootballEnabled(c)
                 || isWidgetReleasesEnabled(c)
                 || isWidgetWeatherEnabled(c)
-                || isWidgetCricketEnabled(c)
                 || isWidgetNewsEnabled(c)
                 || isWidgetTopMediaEnabled(c));
     }
@@ -446,8 +396,6 @@ public final class HomeDashboard {
 
     public static String defaultCountryForUiLang(Context c) {
         String lang = I18n.getLang(c);
-        if ("tr".equals(lang)) return "TR";
-        if ("az".equals(lang)) return "AZ";
         if ("de".equals(lang)) return "DE";
         if ("fr".equals(lang)) return "FR";
         if ("es".equals(lang)) return "ES";
@@ -457,12 +405,6 @@ public final class HomeDashboard {
         if ("ru".equals(lang)) return "RU";
         if ("pl".equals(lang)) return "PL";
         if ("sv".equals(lang)) return "SE";
-        if ("hi".equals(lang)) return "IN";
-        if ("ar".equals(lang)) return "SA";
-        if ("he".equals(lang)) return "IL";
-        if ("ja".equals(lang)) return "JP";
-        if ("ko".equals(lang)) return "KR";
-        if ("zh".equals(lang)) return "CN";
         return "US";
     }
 
@@ -635,281 +577,6 @@ public final class HomeDashboard {
     }
 
     // =========================================================================
-    // 1. PRAYER TIMES MODEL & FETCHER
-    // =========================================================================
-
-    public static final class PrayerData {
-        public String city = "";
-        public String fajr = "05:15";
-        public String sunrise = "06:42";
-        public String dhuhr = "12:55";
-        public String asr = "16:20";
-        public String maghrib = "19:05";
-        public String isha = "20:30";
-        public String dateStr = "";
-    }
-
-    public static final int[] PRAYER_METHOD_IDS = { 13, 3, 2, 4, 5, 0, 7 };
-    public static final String[] PRAYER_METHOD_NAMES = {
-        "Diyanet / Qafqaz (Regional)",
-        "Muslim World League (MWL)",
-        "ISNA (North America)",
-        "Umm Al-Qura (Makkah)",
-        "Egyptian General Authority",
-        "Shia Ithna-Ashari (Jafari)",
-        "Institute of Geophysics (Tehran)"
-    };
-
-    public static int getPrayerMethod(Context c) {
-        return prefs(c).getInt(KEY_PRAYER_METHOD, 13);
-    }
-
-    public static void setPrayerMethod(Context c, int methodId) {
-        prefs(c).edit()
-                .putInt(KEY_PRAYER_METHOD, methodId)
-                .remove(KEY_PRAYER_CACHE_DAY)
-                .apply();
-    }
-
-    public static String getPrayerMethodName(Context c) {
-        int m = getPrayerMethod(c);
-        for (int i = 0; i < PRAYER_METHOD_IDS.length; i++) {
-            if (PRAYER_METHOD_IDS[i] == m) return PRAYER_METHOD_NAMES[i];
-        }
-        return PRAYER_METHOD_NAMES[0];
-    }
-
-    public static boolean isPrayerLocationAuto(Context c) {
-        SharedPreferences sp = prefs(c);
-        if (!sp.getBoolean(KEY_PRAYER_LOC_AUTO, true)) {
-            return !sp.contains(KEY_PRAYER_LOC_LAT) || !sp.contains(KEY_PRAYER_LOC_LON);
-        }
-        return true;
-    }
-
-    public static void setPrayerLocationAuto(Context c) {
-        prefs(c).edit()
-                .putBoolean(KEY_PRAYER_LOC_AUTO, true)
-                .remove(KEY_PRAYER_LOC_NAME)
-                .remove(KEY_PRAYER_LOC_LAT)
-                .remove(KEY_PRAYER_LOC_LON)
-                .remove(KEY_PRAYER_CACHE_DAY)
-                .remove(KEY_PRAYER_CACHE_JSON)
-                .remove(KEY_PRAYER_CACHE_CITY)
-                .apply();
-    }
-
-    public static void setPrayerLocation(Context c, String label, double lat, double lon) {
-        prefs(c).edit()
-                .putBoolean(KEY_PRAYER_LOC_AUTO, false)
-                .putString(KEY_PRAYER_LOC_NAME, label != null ? label.trim() : "")
-                .putFloat(KEY_PRAYER_LOC_LAT, (float) lat)
-                .putFloat(KEY_PRAYER_LOC_LON, (float) lon)
-                .remove(KEY_PRAYER_CACHE_DAY)
-                .remove(KEY_PRAYER_CACHE_JSON)
-                .remove(KEY_PRAYER_CACHE_CITY)
-                .apply();
-    }
-
-    public static void invalidatePrayerCache(Context c) {
-        prefs(c).edit()
-                .remove(KEY_PRAYER_CACHE_DAY)
-                .remove(KEY_PRAYER_CACHE_CITY)
-                .apply();
-    }
-
-    public static String getEffectivePrayerCity(Context c) {
-        if (!isPrayerLocationAuto(c)) {
-            String custom = prefs(c).getString(KEY_PRAYER_LOC_NAME, "");
-            if (custom != null && !custom.isEmpty()) return custom;
-        }
-        String wx = Weather.place(c);
-        if (wx != null && !wx.isEmpty()) return wx;
-        Weather.Data wd = Weather.cached(c);
-        if (wd != null && wd.place != null && !wd.place.isEmpty()) return wd.place;
-        return "";
-    }
-
-    public static String getPrayerLocationSummary(Context c) {
-        if (isPrayerLocationAuto(c)) {
-            String wx = Weather.place(c);
-            if (wx == null || wx.isEmpty()) {
-                Weather.Data wd = Weather.cached(c);
-                if (wd != null && wd.place != null) wx = wd.place;
-            }
-            String base = I18n.s(c, "Sync with Weather", "Hava Durumu ile e\u015fitle");
-            return (wx != null && !wx.isEmpty()) ? (base + " (" + wx + ")") : base;
-        }
-        String custom = prefs(c).getString(KEY_PRAYER_LOC_NAME, "");
-        return (custom != null && !custom.isEmpty()) ? custom : I18n.s(c, "Custom", "\u00d6zel");
-    }
-
-    public interface PrayerCallback {
-        void onResult(PrayerData data);
-    }
-
-    public static PrayerData getCachedOrFallbackPrayer(Context c) {
-        SharedPreferences sp = prefs(c);
-        String json = sp.getString(KEY_PRAYER_CACHE_JSON, null);
-        String city = sp.getString(KEY_PRAYER_CACHE_CITY, "");
-        if (json != null) {
-            PrayerData parsed = parsePrayerJson(json, city);
-            if (parsed != null) return parsed;
-        }
-        PrayerData fb = new PrayerData();
-        fb.city = getEffectivePrayerCity(c);
-        return fb;
-    }
-
-    public static void fetchPrayerTimes(final Context c, final boolean force, final PrayerCallback cb) {
-        final SharedPreferences sp = prefs(c);
-        final int todayKey = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
-                + Calendar.getInstance().get(Calendar.YEAR) * 1000;
-        final String curCity = getEffectivePrayerCity(c);
-        if (!force && sp.getInt(KEY_PRAYER_CACHE_DAY, -1) == todayKey) {
-            String cachedJson = sp.getString(KEY_PRAYER_CACHE_JSON, null);
-            String cachedCity = sp.getString(KEY_PRAYER_CACHE_CITY, "");
-            if (cachedJson != null && (curCity.isEmpty() || curCity.equalsIgnoreCase(cachedCity))) {
-                PrayerData d = parsePrayerJson(cachedJson, cachedCity);
-                if (d != null) {
-                    if (cb != null) cb.onResult(d);
-                    return;
-                }
-            }
-        }
-
-        EXEC.execute(() -> {
-            try {
-                float lat = Float.NaN;
-                float lon = Float.NaN;
-                String city = "";
-
-                if (!isPrayerLocationAuto(c)) {
-                    lat = sp.getFloat(KEY_PRAYER_LOC_LAT, Float.NaN);
-                    lon = sp.getFloat(KEY_PRAYER_LOC_LON, Float.NaN);
-                    city = sp.getString(KEY_PRAYER_LOC_NAME, "");
-                }
-
-                if (Float.isNaN(lat) || Float.isNaN(lon)) {
-                    SharedPreferences wp = Weather.prefs(c);
-                    if (wp.contains(Weather.K_LAT) && wp.contains(Weather.K_LON)) {
-                        lat = wp.getFloat(Weather.K_LAT, Float.NaN);
-                        lon = wp.getFloat(Weather.K_LON, Float.NaN);
-                        city = wp.getString(Weather.K_PLACE, "");
-                    }
-                }
-
-                if (Float.isNaN(lat) || Float.isNaN(lon)) {
-                    try {
-                        String geoRaw = httpGet("https://ipwho.is/");
-                        JSONObject g = new JSONObject(geoRaw);
-                        if (g.optBoolean("success", true)) {
-                            lat = (float) g.optDouble("latitude", 40.4093);
-                            lon = (float) g.optDouble("longitude", 49.8671);
-                            city = g.optString("city", "Baku");
-                        }
-                    } catch (Throwable ignored) {
-                        lat = 40.4093f;
-                        lon = 49.8671f;
-                        city = "Baku";
-                    }
-                }
-                int method = getPrayerMethod(c);
-                long ts = System.currentTimeMillis() / 1000L;
-                String url = String.format(Locale.US,
-                        "https://api.aladhan.com/v1/timings/%d?latitude=%.4f&longitude=%.4f&method=%d",
-                        ts, lat, lon, method);
-                String resp = httpGet(url);
-                final PrayerData parsed = parsePrayerJson(resp, city);
-                if (parsed != null) {
-                    sp.edit()
-                            .putString(KEY_PRAYER_CACHE_JSON, resp)
-                            .putInt(KEY_PRAYER_CACHE_DAY, todayKey)
-                            .putString(KEY_PRAYER_CACHE_CITY, city)
-                            .apply();
-                    if (cb != null) {
-                        MAIN.post(() -> cb.onResult(parsed));
-                    }
-                    return;
-                }
-            } catch (Throwable ignored) {}
-            final PrayerData fallback = getCachedOrFallbackPrayer(c);
-            if (cb != null) {
-                MAIN.post(() -> cb.onResult(fallback));
-            }
-        });
-    }
-
-    private static PrayerData parsePrayerJson(String raw, String city) {
-        try {
-            JSONObject root = new JSONObject(raw);
-            JSONObject data = root.optJSONObject("data");
-            if (data == null) return null;
-            JSONObject timings = data.optJSONObject("timings");
-            if (timings == null) return null;
-            PrayerData d = new PrayerData();
-            d.city = city != null ? city : "";
-            d.fajr = cleanTime(timings.optString("Fajr", "05:15"));
-            d.sunrise = cleanTime(timings.optString("Sunrise", "06:42"));
-            d.dhuhr = cleanTime(timings.optString("Dhuhr", "12:55"));
-            d.asr = cleanTime(timings.optString("Asr", "16:20"));
-            d.maghrib = cleanTime(timings.optString("Maghrib", "19:05"));
-            d.isha = cleanTime(timings.optString("Isha", "20:30"));
-            JSONObject dateObj = data.optJSONObject("date");
-            if (dateObj != null) {
-                d.dateStr = dateObj.optString("readable", "");
-            }
-            return d;
-        } catch (Throwable t) {
-            return null;
-        }
-    }
-
-    private static String cleanTime(String t) {
-        if (t == null) return "00:00";
-        int idx = t.indexOf(' ');
-        if (idx > 0) t = t.substring(0, idx);
-        return t.trim();
-    }
-
-    private static int parseMinutes(String hhmm) {
-        try {
-            String[] parts = cleanTime(hhmm).split(":");
-            return Integer.parseInt(parts[0]) * 60 + Integer.parseInt(parts[1]);
-        } catch (Throwable t) {
-            return 0;
-        }
-    }
-
-    /**
-     * Returns [nextPrayerIndex (0..4 for Fajr,Dhuhr,Asr,Maghrib,Isha), minutesUntilNext].
-     */
-    public static int[] computeNextPrayer(PrayerData d) {
-        Calendar now = Calendar.getInstance();
-        int curMin = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE);
-        String[] times = { d.fajr, d.dhuhr, d.asr, d.maghrib, d.isha };
-        for (int i = 0; i < times.length; i++) {
-            int pm = parseMinutes(times[i]);
-            if (pm > curMin) {
-                return new int[]{ i, pm - curMin };
-            }
-        }
-        int fajrMin = parseMinutes(d.fajr);
-        int untilTomorrowFajr = (24 * 60 - curMin) + fajrMin;
-        return new int[]{ 0, untilTomorrowFajr };
-    }
-
-    public static String[] getPrayerLabels(Context c) {
-        return new String[]{
-            I18n.t(c, "prayer_fajr"),
-            I18n.t(c, "prayer_dhuhr"),
-            I18n.t(c, "prayer_asr"),
-            I18n.t(c, "prayer_maghrib"),
-            I18n.t(c, "prayer_isha")
-        };
-    }
-
-    // =========================================================================
     // 2. FOOTBALL MATCHES MODEL & FETCHER
     // =========================================================================
 
@@ -993,54 +660,83 @@ public final class HomeDashboard {
     }
 
     public static final String[] POPULAR_TEAMS = {
-        "Qarabağ", "Neftçi", "Sabah", "Zirə", "Turan Tovuz",
-        "Galatasaray", "Fenerbahçe", "Beşiktaş", "Trabzonspor", "Başakşehir",
+        "Napoli", "Inter", "AC Milan", "Juventus", "AS Roma", "Lazio", "Atalanta", "Fiorentina", "Bologna", "Como",
         "Real Madrid", "Barcelona", "Atlético Madrid", "Real Sociedad", "Athletic Club",
         "Manchester City", "Arsenal", "Liverpool", "Chelsea", "Manchester United", "Tottenham", "Aston Villa", "Newcastle",
         "Bayern Munich", "Borussia Dortmund", "Bayer Leverkusen", "RB Leipzig",
-        "Inter Milan", "AC Milan", "Juventus", "Napoli", "AS Roma", "Atalanta",
         "PSG", "Marseille", "Monaco", "Lyon",
-        "Ajax", "PSV", "Feyenoord", "Benfica", "Sporting CP", "Porto",
-        "Al-Nassr", "Al-Hilal", "Al-Ittihad", "Inter Miami", "Boca Juniors", "River Plate", "Flamengo"
+        "Ajax", "PSV", "Feyenoord", "Benfica", "Sporting CP", "Porto"
     };
 
+    /** Leagues the user can pick; "all" means every competition in {@link #EU_COMPETITIONS}. */
     public static final String[][] LEAGUES = {
-        { "all", "All Leagues & Cups (Worldwide)" },
+        { "all", "All Leagues & Cups" },
         { "uefa.champions", "UEFA Champions League" },
         { "uefa.europa", "UEFA Europa League" },
         { "uefa.europa.conf", "UEFA Conference League" },
         { "uefa.nations", "UEFA Nations League" },
-        { "fifa.world", "FIFA World Cup / Qualifiers" },
-        { "eng.1", "Premier League (England)" },
-        { "eng.fa", "FA Cup / EFL Cup" },
-        { "esp.1", "LaLiga (Spain)" },
-        { "esp.copa_del_rey", "Copa del Rey" },
+        { "fifa.world", "FIFA World Cup" },
         { "ita.1", "Serie A (Italy)" },
         { "ita.coppa_italia", "Coppa Italia" },
+        { "eng.1", "Premier League (England)" },
+        { "esp.1", "LaLiga (Spain)" },
         { "ger.1", "Bundesliga (Germany)" },
-        { "ger.dfb_pokal", "DFB-Pokal" },
-        { "tur.1", "Trendyol Süper Lig (Turkey)" },
-        { "tur.cup", "Ziraat Türkiye Kupası" },
         { "fra.1", "Ligue 1 (France)" },
-        { "aze.1", "Misli Premyer Liqası (Azerbaijan)" },
         { "ned.1", "Eredivisie (Netherlands)" },
-        { "por.1", "Liga Portugal" },
-        { "ksa.1", "Saudi Pro League" },
-        { "usa.1", "MLS" },
-        { "bra.1", "Brasileirão" },
-        { "conmebol.libertadores", "Copa Libertadores" }
+        { "por.1", "Liga Portugal" }
     };
 
+    /**
+     * European competitions shown under "All Leagues & Cups": ESPN league id (the "l:" part of an
+     * event uid), short name. ESPN's all-soccer scoreboard covers the world, so it is filtered here.
+     */
+    private static final String[][] EU_COMPETITIONS = {
+        { "775", "UCL" }, { "776", "UEL" }, { "20296", "UECL" }, { "5462", "Supercoppa UEFA" },
+        { "2395", "Nations League" }, { "606", "Mondiali" }, { "786", "Qualif. Mondiali" },
+        { "781", "Europei" }, { "3947", "Qualif. Europei" }, { "3922", "Amichevole" }, { "5501", "Mondiale Club" },
+        { "730", "Serie A" }, { "3956", "Coppa Italia" }, { "8103", "Supercoppa" },
+        { "700", "Premier League" }, { "3918", "FA Cup" }, { "3920", "Carabao Cup" },
+        { "740", "LaLiga" }, { "3951", "Copa del Rey" },
+        { "720", "Bundesliga" }, { "3954", "DFB-Pokal" },
+        { "710", "Ligue 1" }, { "3952", "Coupe de France" },
+        { "725", "Eredivisie" }, { "715", "Liga Portugal" }
+    };
+
+    private static String euCompetitionName(String leagueId) {
+        if (leagueId == null) return null;
+        for (String[] lg : EU_COMPETITIONS) {
+            if (lg[0].equals(leagueId)) return lg[1];
+        }
+        return null;
+    }
+
+    /** The league id inside an ESPN event uid such as "s:600~l:775~e:401915380". */
+    private static String leagueIdFromUid(String uid) {
+        if (uid == null) return null;
+        int i = uid.indexOf("~l:");
+        if (i < 0) return null;
+        int end = uid.indexOf('~', i + 3);
+        return end < 0 ? uid.substring(i + 3) : uid.substring(i + 3, end);
+    }
+
     public static Set<String> getFavoriteTeams(Context c) {
-        Set<String> raw = prefs(c).getStringSet(KEY_FAV_TEAMS, null);
+        SharedPreferences sp = prefs(c);
+        Set<String> raw = sp.getStringSet(KEY_FAV_TEAMS, null);
         if (raw == null) {
             Set<String> def = new HashSet<String>();
-            def.add("Qarabağ");
-            def.add("Galatasaray");
-            def.add("Real Madrid");
+            def.add("Napoli");
             return def;
         }
-        return new HashSet<String>(raw);
+        Set<String> favs = new HashSet<String>(raw);
+        // Once: drop the old non-European defaults (Turkey, Azerbaijan...) a saved set still carries.
+        if (!sp.getBoolean(KEY_FAV_TEAMS_EU, false)) {
+            favs.removeAll(java.util.Arrays.asList("Qarabağ", "Neftçi", "Sabah", "Zirə", "Turan Tovuz",
+                    "Galatasaray", "Fenerbahçe", "Beşiktaş", "Trabzonspor", "Başakşehir",
+                    "Al-Nassr", "Al-Hilal", "Al-Ittihad", "Inter Miami", "Boca Juniors", "River Plate", "Flamengo"));
+            if (favs.isEmpty()) favs.add("Napoli");
+            sp.edit().putStringSet(KEY_FAV_TEAMS, favs).putBoolean(KEY_FAV_TEAMS_EU, true).apply();
+        }
+        return favs;
     }
 
     public static void toggleFavoriteTeam(Context c, String team) {
@@ -1061,7 +757,11 @@ public final class HomeDashboard {
     }
 
     public static String getSelectedLeague(Context c) {
-        return prefs(c).getString(KEY_FOOTBALL_LEAGUE, "all");
+        String code = prefs(c).getString(KEY_FOOTBALL_LEAGUE, "all");
+        for (String[] lg : LEAGUES) {
+            if (lg[0].equals(code)) return code;
+        }
+        return "all";
     }
 
     public static void setSelectedLeague(Context c, String code) {
@@ -1081,7 +781,7 @@ public final class HomeDashboard {
         if (!sMemMatches.isEmpty()) return new ArrayList<MatchItem>(sMemMatches);
         String raw = prefs(c).getString(KEY_FOOTBALL_CACHE_JSON, null);
         if (raw != null) {
-            List<MatchItem> parsed = parseEspnEvents(c, raw, "");
+            List<MatchItem> parsed = parseEspnEvents(c, raw, "", true);
             if (!parsed.isEmpty()) {
                 sMemMatches = parsed;
                 return parsed;
@@ -1090,13 +790,22 @@ public final class HomeDashboard {
         return Collections.emptyList();
     }
 
-    private static String getScoreboardDateRangeParam() {
+    /** How many days of fixtures to load, today included. */
+    private static final int FOOTBALL_DAYS = 7;
+
+    /**
+     * ESPN's scoreboard ignores date ranges ("dates=20261124-20261201" returns no events), so the
+     * fixtures are read one day at a time.
+     */
+    private static List<String> scoreboardDays() {
         SimpleDateFormat fmt = new SimpleDateFormat("yyyyMMdd", Locale.US);
         Calendar cal = Calendar.getInstance();
-        String start = fmt.format(cal.getTime());
-        cal.add(Calendar.DAY_OF_YEAR, 7);
-        String end = fmt.format(cal.getTime());
-        return "dates=" + start + "-" + end + "&limit=100";
+        List<String> out = new ArrayList<String>();
+        for (int i = 0; i < FOOTBALL_DAYS; i++) {
+            out.add(fmt.format(cal.getTime()));
+            cal.add(Calendar.DAY_OF_YEAR, 1);
+        }
+        return out;
     }
 
     public static void fetchFootballMatches(final Context c, final boolean force, final FootballCallback cb) {
@@ -1118,58 +827,48 @@ public final class HomeDashboard {
         EXEC.execute(() -> {
             List<MatchItem> all = new ArrayList<MatchItem>();
             Set<String> seenIds = new HashSet<String>();
+            JSONArray kept = new JSONArray();
             String league = getSelectedLeague(c);
-            String dateRange = getScoreboardDateRangeParam();
-            try {
-                if ("all".equals(league)) {
-                    String[] codes = {
-                        "all",
-                        "uefa.champions", "uefa.europa", "uefa.europa.conf", "uefa.nations",
-                        "fifa.world", "eng.1", "eng.fa", "esp.1", "esp.copa_del_rey",
-                        "tur.1", "tur.cup", "ita.1", "ger.1", "fra.1",
-                        "aze.1", "ned.1", "por.1", "ksa.1"
-                    };
-                    String firstRaw = null;
-                    for (String code : codes) {
-                        try {
-                            String url = "https://site.api.espn.com/apis/site/v2/sports/soccer/"
-                                    + code + "/scoreboard?" + dateRange;
-                            String json = httpGet(url);
-                            if (firstRaw == null && json != null && json.contains("\"events\"")) {
-                                firstRaw = json;
-                            }
-                            List<MatchItem> sub = parseEspnEvents(c, json, "all".equals(code) ? "" : code);
-                            for (MatchItem m : sub) {
-                                String key = (m.id != null && !m.id.isEmpty())
-                                        ? m.id : (m.homeTeam + "|" + m.awayTeam + "|" + m.startEpochMs);
-                                if (seenIds.add(key)) {
-                                    all.add(m);
-                                }
-                            }
-                            if ("all".equals(code) && !all.isEmpty() && cb != null) {
-                                final List<MatchItem> initial = new ArrayList<MatchItem>(all);
-                                sortMatches(c, initial);
-                                MAIN.post(() -> cb.onResult(initial));
-                            }
-                        } catch (Throwable ignored) {}
-                    }
-                    if (firstRaw != null) {
-                        sp.edit()
-                                .putString(KEY_FOOTBALL_CACHE_JSON, firstRaw)
-                                .putLong(KEY_FOOTBALL_CACHE_TS, System.currentTimeMillis())
-                                .apply();
-                    }
-                } else {
+            boolean everything = "all".equals(league);
+            List<String> days = scoreboardDays();
+            for (int d = 0; d < days.size(); d++) {
+                try {
                     String url = "https://site.api.espn.com/apis/site/v2/sports/soccer/"
-                            + league + "/scoreboard?" + dateRange;
+                            + (everything ? "all" : league) + "/scoreboard?dates=" + days.get(d)
+                            // The all-soccer board stops at 100 events a day without it (a Saturday has ~250).
+                            + "&limit=400";
                     String json = httpGet(url);
-                    all.addAll(parseEspnEvents(c, json, league));
+                    if (json == null) continue;
+                    JSONArray events = new JSONObject(json).optJSONArray("events");
+                    if (events == null) continue;
+                    JSONArray dayKept = new JSONArray();
+                    for (int i = 0; i < events.length(); i++) {
+                        JSONObject ev = events.optJSONObject(i);
+                        if (ev == null) continue;
+                        if (everything && euCompetitionName(leagueIdFromUid(ev.optString("uid"))) == null) continue;
+                        if (seenIds.add(ev.optString("id", ev.optString("uid")))) {
+                            dayKept.put(ev);
+                            kept.put(ev);
+                        }
+                    }
+                    JSONObject wrap = new JSONObject().put("events", dayKept);
+                    all.addAll(parseEspnEvents(c, wrap.toString(), everything ? "" : league, everything));
+                    // Today first: the card fills in while the rest of the week loads.
+                    if (d == 0 && cb != null && !all.isEmpty()) {
+                        final List<MatchItem> initial = new ArrayList<MatchItem>(all);
+                        sortMatches(c, initial);
+                        MAIN.post(() -> cb.onResult(initial));
+                    }
+                } catch (Throwable ignored) {}
+            }
+            if (kept.length() > 0) {
+                try {
                     sp.edit()
-                            .putString(KEY_FOOTBALL_CACHE_JSON, json)
+                            .putString(KEY_FOOTBALL_CACHE_JSON, new JSONObject().put("events", kept).toString())
                             .putLong(KEY_FOOTBALL_CACHE_TS, System.currentTimeMillis())
                             .apply();
-                }
-            } catch (Throwable ignored) {}
+                } catch (Throwable ignored) {}
+            }
 
             sortMatches(c, all);
             if (!all.isEmpty()) {
@@ -1216,7 +915,8 @@ public final class HomeDashboard {
                 .replace('ş', 's').replace('ç', 'c').replace('ö', 'o').replace('ü', 'u');
     }
 
-    private static List<MatchItem> parseEspnEvents(Context c, String rawJson, String fallbackLeague) {
+    /** onlyEu keeps the events of {@link #EU_COMPETITIONS} and names their league from it. */
+    private static List<MatchItem> parseEspnEvents(Context c, String rawJson, String fallbackLeague, boolean onlyEu) {
         List<MatchItem> out = new ArrayList<MatchItem>();
         try {
             JSONObject root = new JSONObject(rawJson);
@@ -1241,7 +941,11 @@ public final class HomeDashboard {
                 MatchItem item = new MatchItem();
                 item.id = ev.optString("id", "");
                 JSONObject evLeague = ev.optJSONObject("league");
-                if (evLeague != null) {
+                String euName = euCompetitionName(leagueIdFromUid(ev.optString("uid")));
+                if (onlyEu && euName == null) continue;
+                if (euName != null) {
+                    item.leagueName = euName;
+                } else if (evLeague != null) {
                     item.leagueName = evLeague.optString("abbreviation", evLeague.optString("name", leagueTitle));
                 } else {
                     item.leagueName = leagueTitle;
@@ -1305,7 +1009,7 @@ public final class HomeDashboard {
                                 boolean sameDay = nowCal.get(Calendar.YEAR) == matchCal.get(Calendar.YEAR)
                                         && nowCal.get(Calendar.DAY_OF_YEAR) == matchCal.get(Calendar.DAY_OF_YEAR);
                                 SimpleDateFormat localFmt = new SimpleDateFormat(
-                                        sameDay ? "HH:mm" : "dd MMM HH:mm", Locale.getDefault());
+                                        sameDay ? "HH:mm" : "EEE d MMM HH:mm", I18n.locale(c));
                                 item.statusText = localFmt.format(dt);
                             }
                         }
@@ -1504,11 +1208,10 @@ public final class HomeDashboard {
 
     private static View createWidgetCardById(MainActivity host, String id, NavBridge nav) {
         View card = null;
-        if (WIDGET_PRAYER.equals(id)) card = createPrayerWidgetCard(host);
+        if (WIDGET_SOURCES.equals(id)) card = createSourcesWidgetCard(host);
         else if (WIDGET_FOOTBALL.equals(id)) card = createFootballWidgetCard(host);
         else if (WIDGET_RELEASES.equals(id)) card = createReleasesWidgetCard(host);
         else if (WIDGET_WEATHER.equals(id)) card = createWeatherWidgetCard(host, nav);
-        else if (WIDGET_CRICKET.equals(id)) card = createCricketWidgetCard(host);
         else if (WIDGET_NEWS.equals(id)) card = createNewsWidgetCard(host);
         else if (WIDGET_TOP_MEDIA.equals(id)) card = createTopMediaWidgetCard(host);
         return card;
@@ -1600,141 +1303,6 @@ public final class HomeDashboard {
         headerTitle.setLetterSpacing(0.06f);
         headerTitle.setSingleLine(true);
         headerTitle.setEllipsize(TextUtils.TruncateAt.END);
-    }
-
-    // -------------------------------------------------------------------------
-    // WIDGET 1: PRAYER TIMES CARD
-    // -------------------------------------------------------------------------
-    private static View createPrayerWidgetCard(final MainActivity host) {
-        final FrameLayout card = createBaseGlassCard(host, 0xFF34D399);
-        LinearLayout col = new LinearLayout(host);
-        col.setOrientation(LinearLayout.VERTICAL);
-
-        // Header row: dot + Unified White Title + City
-        LinearLayout head = new LinearLayout(host);
-        head.setOrientation(LinearLayout.HORIZONTAL);
-        head.setGravity(Gravity.CENTER_VERTICAL);
-
-        View dot = new View(host);
-        head.addView(dot, new LinearLayout.LayoutParams(dp(host, 6), dp(host, 6)));
-
-        TextView headerTitle = new TextView(host);
-        styleUnifiedWidgetHeader(host, dot, headerTitle, I18n.t(host, "dash_prayer_times"));
-        LinearLayout.LayoutParams htlp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-        htlp.leftMargin = 0;
-        head.addView(headerTitle, htlp);
-
-        final TextView cityTv = new TextView(host);
-        cityTv.setTextColor(0x88FFFFFF);
-        cityTv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 9f);
-        cityTv.setSingleLine(true);
-        cityTv.setEllipsize(TextUtils.TruncateAt.END);
-        head.addView(cityTv);
-
-        col.addView(head, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-
-        // Next prayer + countdown row
-        final TextView nextPrayerTv = new TextView(host);
-        nextPrayerTv.setTextColor(Color.WHITE);
-        nextPrayerTv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12.5f);
-        nextPrayerTv.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
-        nextPrayerTv.setSingleLine(true);
-        nextPrayerTv.setEllipsize(TextUtils.TruncateAt.END);
-        LinearLayout.LayoutParams nplp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        nplp.topMargin = dp(host, 2);
-        col.addView(nextPrayerTv, nplp);
-
-        final TextView countdownTv = new TextView(host);
-        countdownTv.setTextColor(0xB8FFFFFF);
-        countdownTv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 9.8f);
-        countdownTv.setSingleLine(true);
-        col.addView(countdownTv);
-
-        // Mini 5-prayer strip at bottom
-        final LinearLayout strip = new LinearLayout(host);
-        strip.setOrientation(LinearLayout.HORIZONTAL);
-        strip.setGravity(Gravity.CENTER_VERTICAL);
-        LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        slp.topMargin = dp(host, 3);
-        col.addView(strip, slp);
-
-        card.addView(col, new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
-
-        final String[] lastStripSig = { "" };
-        final Runnable bindUi = new Runnable() {
-            @Override
-            public void run() {
-                PrayerData d = getCachedOrFallbackPrayer(host);
-                cityTv.setText(d.city != null ? d.city : "");
-                int[] next = computeNextPrayer(d);
-                String[] labels = getPrayerLabels(host);
-                String[] times = { d.fajr, d.dhuhr, d.asr, d.maghrib, d.isha };
-                int nextIdx = next[0];
-                int remMin = next[1];
-                int hrs = remMin / 60;
-                int mins = remMin % 60;
-                nextPrayerTv.setText(labels[nextIdx] + "  " + times[nextIdx]);
-                String remStr = hrs > 0
-                        ? (hrs + "h " + mins + "m " + I18n.t(host, "prayer_remaining"))
-                        : (mins + "m " + I18n.t(host, "prayer_remaining"));
-                countdownTv.setText(remStr);
-
-                String stripSig = nextIdx + "|" + d.fajr + "|" + d.dhuhr + "|" + d.asr + "|" + d.maghrib + "|" + d.isha;
-                if (stripSig.equals(lastStripSig[0]) && strip.getChildCount() == 5) {
-                    return;
-                }
-                lastStripSig[0] = stripSig;
-
-                strip.removeAllViews();
-                for (int i = 0; i < 5; i++) {
-                    LinearLayout cell = new LinearLayout(host);
-                    cell.setOrientation(LinearLayout.VERTICAL);
-                    cell.setGravity(Gravity.CENTER_HORIZONTAL);
-                    boolean isNext = (i == nextIdx);
-
-                    TextView lbl = new TextView(host);
-                    String shortName = labels[i].length() > 3 ? labels[i].substring(0, 3) : labels[i];
-                    lbl.setText(shortName);
-                    lbl.setTextSize(TypedValue.COMPLEX_UNIT_SP, 8f);
-                    lbl.setTextColor(isNext ? 0xFF34D399 : 0x77FFFFFF);
-                    lbl.setTypeface(Typeface.create("sans-serif", isNext ? Typeface.BOLD : Typeface.NORMAL));
-                    cell.addView(lbl);
-
-                    TextView tm = new TextView(host);
-                    tm.setText(times[i]);
-                    tm.setTextSize(TypedValue.COMPLEX_UNIT_SP, 8.5f);
-                    tm.setTextColor(isNext ? Color.WHITE : 0xAAFFFFFF);
-                    tm.setTypeface(Typeface.create("sans-serif-medium", isNext ? Typeface.BOLD : Typeface.NORMAL));
-                    cell.addView(tm);
-
-                    strip.addView(cell, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-                }
-            }
-        };
-
-        bindUi.run();
-        fetchPrayerTimes(host, false, new PrayerCallback() {
-            @Override
-            public void onResult(PrayerData data) {
-                bindUi.run();
-            }
-        });
-        sCardRefreshers.put(card, () -> {
-            bindUi.run();
-            fetchPrayerTimes(host, false, data -> bindUi.run());
-        });
-
-        card.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showPrayerDialog(host, bindUi);
-            }
-        });
-        return card;
     }
 
     // -------------------------------------------------------------------------
@@ -2227,218 +1795,295 @@ public final class HomeDashboard {
     }
 
     // -------------------------------------------------------------------------
-    // WIDGET 5: LIVE CRICKET SCORES CARD
+    // WIDGET: SOURCES CARD (HDMI devices as quick picks)
     // -------------------------------------------------------------------------
-    public static final class CricketMatch {
-        public String series = "";
-        public String team1 = "";
-        public String team2 = "";
-        public String score1 = "";
-        public String score2 = "";
-        public String status = "";
-        public boolean isLive = false;
+    private static final int SOURCE_ON = 0xFF34C759;
+    private static final int SOURCE_OFF = 0x59FFFFFF;
+
+    /** A device picture with rounded corners, grey and dimmed while the device is off. */
+    private static ImageView createSourcePicture(MainActivity host, int device, float radiusDp) {
+        ImageView img = new ImageView(host);
+        img.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        img.setImageBitmap(Sources.picture(host, device));
+        img.setOutlineProvider(host.roundedOutline(new float[]{dp(host, Math.round(radiusDp))}));
+        img.setClipToOutline(true);
+        img.setBackgroundColor(0x33000000);
+        return img;
     }
 
-    private static List<CricketMatch> sMemCricket = new ArrayList<CricketMatch>();
-    private static long sCricketLastTs = 0L;
-
-    public static void fetchCricketMatches(final Context c, final boolean force, final Runnable onDone) {
-        long now = System.currentTimeMillis();
-        if (!force && !sMemCricket.isEmpty() && (now - sCricketLastTs < 120_000L)) {
-            if (onDone != null) onDone.run();
-            return;
+    private static void bindSourcePicture(ImageView img, View dot, boolean on) {
+        img.setColorFilter(on ? null : Sources.GRAYSCALE);
+        img.setAlpha(on ? 1f : 0.45f);
+        if (dot != null && dot.getBackground() instanceof GradientDrawable) {
+            ((GradientDrawable) dot.getBackground()).setColor(on ? SOURCE_ON : SOURCE_OFF);
         }
-        EXEC.execute(() -> {
-            List<CricketMatch> out = new ArrayList<CricketMatch>();
-            try {
-                String[] urls = {
-                    "https://site.api.espn.com/apis/site/v2/sports/cricket/8676/scoreboard",
-                    "https://site.api.espn.com/apis/site/v2/sports/cricket/8048/scoreboard",
-                    "https://site.api.espn.com/apis/site/v2/sports/cricket/all/scoreboard"
-                };
-                for (String u : urls) {
-                    try {
-                        String raw = httpGet(u);
-                        JSONObject root = new JSONObject(raw);
-                        JSONArray events = root.optJSONArray("events");
-                        if (events == null) continue;
-                        for (int i = 0; i < events.length(); i++) {
-                            JSONObject ev = events.optJSONObject(i);
-                            if (ev == null) continue;
-                            JSONArray comps = ev.optJSONArray("competitions");
-                            if (comps == null || comps.length() == 0) continue;
-                            JSONObject comp = comps.optJSONObject(0);
-                            JSONArray competitors = comp.optJSONArray("competitors");
-                            if (competitors == null || competitors.length() < 2) continue;
+    }
 
-                            CricketMatch cm = new CricketMatch();
-                            JSONObject lg = ev.optJSONObject("league");
-                            cm.series = lg != null ? lg.optString("abbreviation", lg.optString("name", "ICC")) : "ICC";
-                            JSONObject c0 = competitors.optJSONObject(0);
-                            JSONObject c1 = competitors.optJSONObject(1);
-                            if (c0 != null) {
-                                JSONObject t0 = c0.optJSONObject("team");
-                                cm.team1 = t0 != null ? t0.optString("abbreviation", t0.optString("shortDisplayName", "T1")) : "T1";
-                                cm.score1 = c0.optString("score", "");
-                            }
-                            if (c1 != null) {
-                                JSONObject t1 = c1.optJSONObject("team");
-                                cm.team2 = t1 != null ? t1.optString("abbreviation", t1.optString("shortDisplayName", "T2")) : "T2";
-                                cm.score2 = c1.optString("score", "");
-                            }
-                            JSONObject st = comp.optJSONObject("status");
-                            if (st == null) st = ev.optJSONObject("status");
-                            if (st != null) {
-                                JSONObject tp = st.optJSONObject("type");
-                                if (tp != null) {
-                                    cm.isLive = "in".equalsIgnoreCase(tp.optString("state", ""));
-                                    cm.status = tp.optString("shortDetail", tp.optString("description", ""));
-                                }
-                            }
-                            out.add(cm);
-                        }
-                        if (!out.isEmpty()) break;
-                    } catch (Throwable ignored) {}
-                }
-            } catch (Throwable ignored) {}
+    private static View createSourceDot(MainActivity host, int sizeDp) {
+        View dot = new View(host);
+        GradientDrawable d = new GradientDrawable();
+        d.setShape(GradientDrawable.OVAL);
+        d.setColor(SOURCE_OFF);
+        dot.setBackground(d);
+        dot.setLayoutParams(new LinearLayout.LayoutParams(dp(host, sizeDp), dp(host, sizeDp)));
+        return dot;
+    }
 
-            if (out.isEmpty()) {
-                // Fallback international fixtures if no live endpoint events returned
-                CricketMatch m1 = new CricketMatch();
-                m1.series = "ICC T20I";
-                m1.team1 = "IND"; m1.score1 = "194/5 (20.0)";
-                m1.team2 = "AUS"; m1.score2 = "182/7 (20.0)";
-                m1.status = "IND won by 12 runs";
-                out.add(m1);
-
-                CricketMatch m2 = new CricketMatch();
-                m2.series = "ODI Series";
-                m2.team1 = "ENG"; m2.score1 = "278/6";
-                m2.team2 = "PAK"; m2.score2 = "245/8";
-                m2.status = "ENG won by 33 runs";
-                out.add(m2);
-
-                CricketMatch m3 = new CricketMatch();
-                m3.series = "Test Championship";
-                m3.team1 = "RSA"; m3.score1 = "312 & 188/4";
-                m3.team2 = "NZL"; m3.score2 = "275";
-                m3.status = "Day 3: Stumps";
-                out.add(m3);
+    /**
+     * Calls onChange while the view is attached whenever an input changes state (a console turned
+     * on or off), through Android's TV input callback: no polling.
+     */
+    private static void followInputStates(final MainActivity host, View v, final Runnable onChange) {
+        final android.media.tv.TvInputManager tm = Sources.manager(host);
+        if (tm == null) return;
+        final android.media.tv.TvInputManager.TvInputCallback cb = new android.media.tv.TvInputManager.TvInputCallback() {
+            @Override
+            public void onInputStateChanged(String inputId, int state) {
+                onChange.run();
             }
-            sMemCricket = out;
-            sCricketLastTs = System.currentTimeMillis();
-            if (onDone != null) {
-                MAIN.post(onDone);
+
+            @Override
+            public void onInputAdded(String inputId) {
+                onChange.run();
+            }
+
+            @Override
+            public void onInputRemoved(String inputId) {
+                onChange.run();
+            }
+        };
+        v.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+            @Override
+            public void onViewAttachedToWindow(View view) {
+                try {
+                    tm.registerCallback(cb, MAIN);
+                } catch (Throwable ignored) {}
+                onChange.run();
+            }
+
+            @Override
+            public void onViewDetachedFromWindow(View view) {
+                try {
+                    tm.unregisterCallback(cb);
+                } catch (Throwable ignored) {}
             }
         });
     }
 
-    private static View createCricketWidgetCard(final MainActivity host) {
-        final FrameLayout card = createBaseGlassCard(host, 0xFF4ADE80);
+    private static View createSourcesWidgetCard(final MainActivity host) {
+        final FrameLayout card = createBaseGlassCard(host, SOURCE_ON);
         LinearLayout col = new LinearLayout(host);
         col.setOrientation(LinearLayout.VERTICAL);
 
         LinearLayout head = new LinearLayout(host);
         head.setOrientation(LinearLayout.HORIZONTAL);
         head.setGravity(Gravity.CENTER_VERTICAL);
-
-        View dot = new View(host);
-        head.addView(dot, new LinearLayout.LayoutParams(dp(host, 6), dp(host, 6)));
-
         TextView headerTitle = new TextView(host);
-        styleUnifiedWidgetHeader(host, dot, headerTitle, I18n.t(host, "dash_cricket"));
-        LinearLayout.LayoutParams htlp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-        htlp.leftMargin = 0;
-        head.addView(headerTitle, htlp);
-
+        styleUnifiedWidgetHeader(host, null, headerTitle, I18n.t(host, "dash_sources"));
+        head.addView(headerTitle, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         final TextView badgeTv = new TextView(host);
-        badgeTv.setTextColor(0xFF4ADE80);
+        badgeTv.setTextColor(0x88FFFFFF);
         badgeTv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 8.5f);
-        badgeTv.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        badgeTv.setSingleLine(true);
         head.addView(badgeTv);
-
         col.addView(head, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
-        final LinearLayout rowsBox = new LinearLayout(host);
-        rowsBox.setOrientation(LinearLayout.VERTICAL);
-        LinearLayout.LayoutParams rblp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        rblp.topMargin = dp(host, 4);
-        col.addView(rowsBox, rblp);
+        LinearLayout tiles = new LinearLayout(host);
+        tiles.setOrientation(LinearLayout.HORIZONTAL);
+        final int n = Sources.DEVICES.length;
+        final ImageView[] pics = new ImageView[n];
+        final View[] dots = new View[n];
+        for (int i = 0; i < n; i++) {
+            LinearLayout tile = new LinearLayout(host);
+            tile.setOrientation(LinearLayout.VERTICAL);
+            pics[i] = createSourcePicture(host, i, 7);
+            tile.addView(pics[i], new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+            LinearLayout name = new LinearLayout(host);
+            name.setOrientation(LinearLayout.HORIZONTAL);
+            name.setGravity(Gravity.CENTER_VERTICAL);
+            dots[i] = createSourceDot(host, 5);
+            name.addView(dots[i]);
+            TextView label = new TextView(host);
+            label.setText(Sources.DEVICES[i][0]);
+            label.setTextColor(Color.WHITE);
+            label.setTextSize(TypedValue.COMPLEX_UNIT_SP, 9f);
+            label.setTypeface(Ui.font(host, "semibold"));
+            label.setSingleLine(true);
+            label.setEllipsize(TextUtils.TruncateAt.END);
+            LinearLayout.LayoutParams llp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            llp.leftMargin = dp(host, 4);
+            name.addView(label, llp);
+            LinearLayout.LayoutParams nlp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            nlp.topMargin = dp(host, 3);
+            tile.addView(name, nlp);
+            LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f);
+            if (i > 0) tlp.leftMargin = dp(host, 8);
+            tiles.addView(tile, tlp);
+        }
+        LinearLayout.LayoutParams tilesLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f);
+        tilesLp.topMargin = dp(host, 5);
+        col.addView(tiles, tilesLp);
 
         card.addView(col, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
-        final String[] lastCricketSig = { "" };
-        final Runnable bindUi = new Runnable() {
+        final Runnable bind = new Runnable() {
             @Override
             public void run() {
-                if (sMemCricket.isEmpty()) {
-                    if ("EMPTY".equals(lastCricketSig[0]) && rowsBox.getChildCount() > 0) return;
-                    lastCricketSig[0] = "EMPTY";
-                    rowsBox.removeAllViews();
-                    TextView tv = new TextView(host);
-                    tv.setText(I18n.s(host, "Loading cricket scores…", "Kriket skorları yükleniyor…"));
-                    tv.setTextColor(0x99FFFFFF);
-                    tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, 10.5f);
-                    rowsBox.addView(tv);
-                    return;
+                int on = 0;
+                for (int i = 0; i < n; i++) {
+                    boolean isOn = Sources.isOn(host, i);
+                    if (isOn) on++;
+                    bindSourcePicture(pics[i], dots[i], isOn);
                 }
-                CricketMatch m = sMemCricket.get(0);
-                String sig = m.series + "|" + m.isLive + "|" + m.team1 + "|" + m.score1 + "|" + m.team2 + "|" + m.score2 + "|" + m.status
-                        + (sMemCricket.size() > 1 ? ("|" + sMemCricket.get(1).team1 + "|" + sMemCricket.get(1).status) : "");
-                if (sig.equals(lastCricketSig[0]) && rowsBox.getChildCount() > 0) {
-                    return;
-                }
-                lastCricketSig[0] = sig;
-                rowsBox.removeAllViews();
-                badgeTv.setText(m.isLive ? "● LIVE" : m.series);
-
-                TextView t1 = new TextView(host);
-                t1.setText(m.team1 + (m.score1.isEmpty() ? "" : ("  " + m.score1))
-                        + "   vs   " + m.team2 + (m.score2.isEmpty() ? "" : ("  " + m.score2)));
-                t1.setTextColor(Color.WHITE);
-                t1.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11.2f);
-                t1.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
-                t1.setSingleLine(true);
-                t1.setEllipsize(TextUtils.TruncateAt.END);
-                rowsBox.addView(t1);
-
-                TextView st = new TextView(host);
-                st.setText(m.status);
-                st.setTextColor(m.isLive ? 0xFF4ADE80 : 0xB8FFFFFF);
-                st.setTextSize(TypedValue.COMPLEX_UNIT_SP, 9.5f);
-                st.setSingleLine(true);
-                st.setEllipsize(TextUtils.TruncateAt.END);
-                rowsBox.addView(st);
-
-                if (sMemCricket.size() > 1) {
-                    CricketMatch m2 = sMemCricket.get(1);
-                    TextView sub = new TextView(host);
-                    sub.setText(m2.team1 + " vs " + m2.team2 + " • " + m2.status);
-                    sub.setTextColor(0x88FFFFFF);
-                    sub.setTextSize(TypedValue.COMPLEX_UNIT_SP, 8.8f);
-                    sub.setSingleLine(true);
-                    sub.setEllipsize(TextUtils.TruncateAt.END);
-                    LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                    slp.topMargin = dp(host, 2);
-                    rowsBox.addView(sub, slp);
-                }
+                badgeTv.setText(on == 0 ? I18n.t(host, "sources_all_off")
+                        : on == 1 ? I18n.t(host, "sources_one_on")
+                        : I18n.s(host, "%d on", "%d açık", on));
             }
         };
-
-        bindUi.run();
-        fetchCricketMatches(host, false, bindUi);
-        sCardRefreshers.put(card, () -> fetchCricketMatches(host, false, bindUi));
+        bind.run();
+        followInputStates(host, card, bind);
+        sCardRefreshers.put(card, bind);
         card.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showCricketDialog(host, bindUi);
+                showSourcesDialog(host);
             }
         });
         return card;
+    }
+
+    /** The three devices in big tiles: OK switches the TV to that HDMI port. */
+    private static void showSourcesDialog(final MainActivity host) {
+        final Dialog d = createNativeGlassDialog(host);
+        LinearLayout panel = createModalContainer(host, dp(host, 720));
+
+        TextView title = new TextView(host);
+        title.setText(I18n.t(host, "dash_sources"));
+        title.setTextColor(Color.WHITE);
+        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f);
+        title.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+        panel.addView(title);
+
+        TextView sub = new TextView(host);
+        sub.setText(I18n.t(host, "sources_hint"));
+        sub.setTextColor(0x99FFFFFF);
+        sub.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f);
+        LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        slp.topMargin = dp(host, 2);
+        panel.addView(sub, slp);
+
+        LinearLayout row = new LinearLayout(host);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setClipChildren(false);
+        row.setClipToPadding(false);
+        row.setPadding(0, dp(host, 8), 0, dp(host, 8));
+        final int n = Sources.DEVICES.length;
+        final ImageView[] pics = new ImageView[n];
+        final View[] dots = new View[n];
+        final TextView[] states = new TextView[n];
+        View firstOn = null;
+        final View[] tiles = new View[n];
+        for (int i = 0; i < n; i++) {
+            final int device = i;
+            final LinearLayout tile = new LinearLayout(host);
+            tile.setOrientation(LinearLayout.VERTICAL);
+            tile.setFocusable(true);
+            tile.setClickable(true);
+            tile.setPadding(dp(host, 8), dp(host, 8), dp(host, 8), dp(host, 10));
+            final GradientDrawable bg = new GradientDrawable();
+            bg.setCornerRadius(dp(host, 16));
+            bg.setColor(0x1AFFFFFF);
+            bg.setStroke(dp(host, 1), 0x28FFFFFF);
+            tile.setBackground(bg);
+
+            pics[i] = createSourcePicture(host, i, 11);
+            tile.addView(pics[i], new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(host, 120)));
+
+            LinearLayout name = new LinearLayout(host);
+            name.setOrientation(LinearLayout.HORIZONTAL);
+            name.setGravity(Gravity.CENTER_VERTICAL);
+            dots[i] = createSourceDot(host, 8);
+            name.addView(dots[i]);
+            final TextView label = new TextView(host);
+            label.setText(Sources.DEVICES[i][0]);
+            label.setTextColor(Color.WHITE);
+            label.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f);
+            label.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
+            label.setSingleLine(true);
+            label.setEllipsize(TextUtils.TruncateAt.END);
+            LinearLayout.LayoutParams llp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            llp.leftMargin = dp(host, 7);
+            name.addView(label, llp);
+            LinearLayout.LayoutParams nlp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            nlp.topMargin = dp(host, 9);
+            tile.addView(name, nlp);
+
+            states[i] = new TextView(host);
+            states[i].setTextColor(0x99FFFFFF);
+            states[i].setTextSize(TypedValue.COMPLEX_UNIT_SP, 11.5f);
+            states[i].setSingleLine(true);
+            LinearLayout.LayoutParams stlp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            stlp.topMargin = dp(host, 2);
+            tile.addView(states[i], stlp);
+
+            tile.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                @Override
+                public void onFocusChange(View v, boolean hasFocus) {
+                    bg.setColor(hasFocus ? 0x33FFFFFF : 0x1AFFFFFF);
+                    bg.setStroke(dp(host, hasFocus ? 2 : 1), hasFocus ? 0xFFFFFFFF : 0x28FFFFFF);
+                    v.animate().scaleX(hasFocus ? 1.04f : 1f).scaleY(hasFocus ? 1.04f : 1f)
+                            .translationZ(hasFocus ? dp(host, 6) : 0f)
+                            .setDuration(150).setInterpolator(MainActivity.EASE).start();
+                }
+            });
+            tile.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (Sources.open(host, device)) {
+                        Clicks.select(host);
+                        d.dismiss();
+                    } else {
+                        host.toast(I18n.s(host, "%s isn't available on this TV", "%s bu TV'de yok",
+                                Sources.portLabel(device)));
+                    }
+                }
+            });
+            LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+            if (i > 0) tlp.leftMargin = dp(host, 14);
+            row.addView(tile, tlp);
+            tiles[i] = tile;
+        }
+        LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        rlp.topMargin = dp(host, 12);
+        panel.addView(row, rlp);
+
+        final Runnable bind = new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < n; i++) {
+                    boolean on = Sources.isOn(host, i);
+                    bindSourcePicture(pics[i], dots[i], on);
+                    states[i].setText(Sources.portLabel(i) + "  \u00b7  "
+                            + I18n.t(host, on ? "source_on" : "source_off"));
+                }
+            }
+        };
+        bind.run();
+        followInputStates(host, panel, bind);
+        for (int i = 0; i < n; i++) {
+            if (firstOn == null && Sources.isOn(host, i)) firstOn = tiles[i];
+        }
+        presentNativeGlassDialog(host, d, panel);
+        (firstOn != null ? firstOn : tiles[0]).requestFocus();
     }
 
     // -------------------------------------------------------------------------
@@ -2855,285 +2500,6 @@ public final class HomeDashboard {
     // 4. INTERACTIVE DETAIL DIALOGS FOR WIDGETS
     // =========================================================================
 
-    private static void showPrayerDialog(final MainActivity host, final Runnable onUpdated) {
-        final Dialog d = createNativeGlassDialog(host);
-
-        LinearLayout panel = createModalContainer(host, dp(host, 520));
-        PrayerData pd = getCachedOrFallbackPrayer(host);
-
-        TextView title = new TextView(host);
-        title.setText(I18n.t(host, "dash_prayer_times")
-                + (pd.city != null && !pd.city.isEmpty() ? (" — " + pd.city) : ""));
-        title.setTextColor(Color.WHITE);
-        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f);
-        title.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
-        panel.addView(title);
-
-        int[] next = computeNextPrayer(pd);
-        String[] labels = {
-            I18n.t(host, "prayer_fajr"),
-            I18n.t(host, "prayer_sunrise"),
-            I18n.t(host, "prayer_dhuhr"),
-            I18n.t(host, "prayer_asr"),
-            I18n.t(host, "prayer_maghrib"),
-            I18n.t(host, "prayer_isha")
-        };
-        String[] times = { pd.fajr, pd.sunrise, pd.dhuhr, pd.asr, pd.maghrib, pd.isha };
-        int highlightIdx = next[0] == 0 ? 0 : next[0] + 1;
-
-        LinearLayout table = new LinearLayout(host);
-        table.setOrientation(LinearLayout.VERTICAL);
-        LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        tlp.topMargin = dp(host, 14);
-        for (int i = 0; i < labels.length; i++) {
-            LinearLayout r = new LinearLayout(host);
-            r.setOrientation(LinearLayout.HORIZONTAL);
-            r.setGravity(Gravity.CENTER_VERTICAL);
-            r.setPadding(dp(host, 14), dp(host, 10), dp(host, 14), dp(host, 10));
-            GradientDrawable rbg = new GradientDrawable();
-            rbg.setCornerRadius(dp(host, 10));
-            boolean hi = (i == highlightIdx);
-            rbg.setColor(hi ? 0x3334D399 : 0x14FFFFFF);
-            r.setBackground(rbg);
-            LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            if (i > 0) rlp.topMargin = dp(host, 6);
-
-            TextView nl = new TextView(host);
-            nl.setText(labels[i]);
-            nl.setTextColor(hi ? 0xFF34D399 : Color.WHITE);
-            nl.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f);
-            nl.setTypeface(Typeface.create("sans-serif-medium", hi ? Typeface.BOLD : Typeface.NORMAL));
-            r.addView(nl, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-
-            TextView tl = new TextView(host);
-            tl.setText(times[i]);
-            tl.setTextColor(Color.WHITE);
-            tl.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f);
-            tl.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
-            r.addView(tl);
-            table.addView(r, rlp);
-        }
-        panel.addView(table, tlp);
-
-        // Location selector button (Country / City or Sync with Weather)
-        final TextView locBtn = createActionPill(host,
-                I18n.s(host, "Location", "Konum") + ": " + getPrayerLocationSummary(host));
-        LinearLayout.LayoutParams lblp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        lblp.topMargin = dp(host, 14);
-        locBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                d.dismiss();
-                showPrayerLocationDialog(host, onUpdated);
-            }
-        });
-        panel.addView(locBtn, lblp);
-
-        // Calculation method cycle button
-        final TextView methodBtn = createActionPill(host,
-                I18n.t(host, "prayer_method_label") + ": " + getPrayerMethodName(host));
-        LinearLayout.LayoutParams mblp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        mblp.topMargin = dp(host, 8);
-        methodBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int cur = getPrayerMethod(host);
-                int nextIdx = 0;
-                for (int i = 0; i < PRAYER_METHOD_IDS.length; i++) {
-                    if (PRAYER_METHOD_IDS[i] == cur) {
-                        nextIdx = (i + 1) % PRAYER_METHOD_IDS.length;
-                        break;
-                    }
-                }
-                setPrayerMethod(host, PRAYER_METHOD_IDS[nextIdx]);
-                methodBtn.setText(I18n.t(host, "prayer_method_label") + ": " + getPrayerMethodName(host));
-                fetchPrayerTimes(host, true, new PrayerCallback() {
-                    @Override
-                    public void onResult(PrayerData data) {
-                        if (onUpdated != null) onUpdated.run();
-                        d.dismiss();
-                        showPrayerDialog(host, onUpdated);
-                    }
-                });
-            }
-        });
-        panel.addView(methodBtn, mblp);
-
-        presentNativeGlassDialog(host, d, panel);
-        locBtn.requestFocus();
-    }
-
-    private static void showPrayerLocationDialog(final MainActivity host, final Runnable onUpdated) {
-        final Dialog d = createNativeGlassDialog(host);
-        LinearLayout panel = createModalContainer(host, dp(host, 560));
-
-        TextView title = new TextView(host);
-        title.setText(I18n.s(host, "Prayer Times Location", "Namaz Vakitleri Konumu"));
-        title.setTextColor(Color.WHITE);
-        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f);
-        title.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
-        panel.addView(title);
-
-        final Runnable applyAndReopen = new Runnable() {
-            @Override
-            public void run() {
-                fetchPrayerTimes(host, true, new PrayerCallback() {
-                    @Override
-                    public void onResult(PrayerData data) {
-                        if (onUpdated != null) onUpdated.run();
-                        showPrayerDialog(host, onUpdated);
-                    }
-                });
-            }
-        };
-
-        // Search input row for any City / Country worldwide
-        LinearLayout searchRow = new LinearLayout(host);
-        searchRow.setOrientation(LinearLayout.HORIZONTAL);
-        searchRow.setGravity(Gravity.CENTER_VERTICAL);
-        LinearLayout.LayoutParams srlp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        srlp.topMargin = dp(host, 12);
-
-        final EditText input = new EditText(host);
-        input.setHint(I18n.s(host, "Search city or country (e.g. Istanbul, London)…", "Şehir veya ülke ara (örn. İstanbul, Londra)…"));
-        input.setHintTextColor(0x88FFFFFF);
-        input.setTextColor(Color.WHITE);
-        input.setSingleLine(true);
-        input.setPadding(dp(host, 14), dp(host, 10), dp(host, 14), dp(host, 10));
-        GradientDrawable inBg = new GradientDrawable();
-        inBg.setCornerRadius(dp(host, 12));
-        inBg.setColor(0x22FFFFFF);
-        inBg.setStroke(dp(host, 1), 0x33FFFFFF);
-        input.setBackground(inBg);
-        searchRow.addView(input, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-
-        final TextView searchBtn = createActionPill(host, I18n.s(host, "Search", "Ara"));
-        LinearLayout.LayoutParams sblp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        sblp.leftMargin = dp(host, 10);
-        searchRow.addView(searchBtn, sblp);
-        panel.addView(searchRow, srlp);
-
-        final ScrollView sv = new ScrollView(host);
-        final LinearLayout listCol = new LinearLayout(host);
-        listCol.setOrientation(LinearLayout.VERTICAL);
-        sv.addView(listCol);
-        LinearLayout.LayoutParams svlp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, dp(host, 270));
-        svlp.topMargin = dp(host, 12);
-        panel.addView(sv, svlp);
-
-        final Runnable populateDefaults = new Runnable() {
-            @Override
-            public void run() {
-                listCol.removeAllViews();
-                boolean isAuto = isPrayerLocationAuto(host);
-                String wxCity = Weather.place(host);
-                String autoLbl = (isAuto ? "✓ " : "")
-                        + I18n.s(host, "Sync with Weather location", "Hava Durumu konumu ile eşitle")
-                        + (wxCity != null && !wxCity.isEmpty() ? " (" + wxCity + ")" : "");
-                TextView autoRow = createActionPill(host, autoLbl);
-                autoRow.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        setPrayerLocationAuto(host);
-                        d.dismiss();
-                        applyAndReopen.run();
-                    }
-                });
-                listCol.addView(autoRow, new LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-
-                String curCustom = prefs(host).getString(KEY_PRAYER_LOC_NAME, "");
-                for (int i = 0; i < PRAYER_POPULAR_CITIES.length; i++) {
-                    final String cName = PRAYER_POPULAR_CITIES[i][0];
-                    final double cLat = Double.parseDouble(PRAYER_POPULAR_CITIES[i][1]);
-                    final double cLon = Double.parseDouble(PRAYER_POPULAR_CITIES[i][2]);
-                    boolean sel = !isAuto && cName.equalsIgnoreCase(curCustom);
-                    TextView row = createActionPill(host, (sel ? "✓ " : "") + cName);
-                    LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                    rlp.topMargin = dp(host, 6);
-                    row.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            setPrayerLocation(host, cName, cLat, cLon);
-                            d.dismiss();
-                            applyAndReopen.run();
-                        }
-                    });
-                    listCol.addView(row, rlp);
-                }
-            }
-        };
-        populateDefaults.run();
-
-        searchBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final String q = input.getText().toString().trim();
-                if (q.isEmpty()) {
-                    populateDefaults.run();
-                    return;
-                }
-                listCol.removeAllViews();
-                TextView loading = new TextView(host);
-                loading.setText(I18n.s(host, "Searching…", "Aranıyor…"));
-                loading.setTextColor(0xB8FFFFFF);
-                loading.setPadding(dp(host, 8), dp(host, 12), dp(host, 8), dp(host, 12));
-                listCol.addView(loading);
-                EXEC.execute(() -> {
-                    List<Weather.Place> found = null;
-                    try {
-                        found = Weather.search(q);
-                    } catch (Throwable ignored) {}
-                    final List<Weather.Place> res = found;
-                    MAIN.post(() -> {
-                        if (!d.isShowing()) return;
-                        listCol.removeAllViews();
-                        if (res == null || res.isEmpty()) {
-                            TextView empty = new TextView(host);
-                            empty.setText(res == null
-                                    ? I18n.s(host, "Search failed. Check internet connection.", "Arama başarısız. İnternet bağlantısını kontrol edin.")
-                                    : I18n.s(host, "No matching city or country found.", "Eşleşen şehir veya ülke bulunamadı."));
-                            empty.setTextColor(0xB8FFFFFF);
-                            empty.setPadding(dp(host, 8), dp(host, 12), dp(host, 8), dp(host, 12));
-                            listCol.addView(empty);
-                            return;
-                        }
-                        for (int i = 0; i < res.size(); i++) {
-                            final Weather.Place pl = res.get(i);
-                            final String label = (pl.detail != null && !pl.detail.isEmpty())
-                                    ? (pl.name + ", " + pl.detail) : pl.name;
-                            TextView row = createActionPill(host, label);
-                            LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(
-                                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                            if (i > 0) rlp.topMargin = dp(host, 6);
-                            row.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v2) {
-                                    setPrayerLocation(host, label, pl.lat, pl.lon);
-                                    d.dismiss();
-                                    applyAndReopen.run();
-                                }
-                            });
-                            listCol.addView(row, rlp);
-                        }
-                        if (listCol.getChildCount() > 0) listCol.getChildAt(0).requestFocus();
-                    });
-                });
-            }
-        });
-
-        presentNativeGlassDialog(host, d, panel);
-        if (listCol.getChildCount() > 0) listCol.getChildAt(0).requestFocus();
-    }
-
     private static void showFootballDialog(final MainActivity host, final Runnable onUpdated, final boolean favOnlyFilter) {
         final Dialog d = createNativeGlassDialog(host);
 
@@ -3463,64 +2829,6 @@ public final class HomeDashboard {
         panel.addView(sv, svlp);
 
         presentNativeGlassDialog(host, d, panel);
-    }
-
-    private static void showCricketDialog(final MainActivity host, final Runnable onUpdated) {
-        final Dialog d = createNativeGlassDialog(host);
-
-        LinearLayout panel = createModalContainer(host, dp(host, 600));
-        TextView title = new TextView(host);
-        title.setText(I18n.s(host, "Live Cricket Scores", "Canlı Kriket Skorları"));
-        title.setTextColor(Color.WHITE);
-        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f);
-        title.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
-        panel.addView(title);
-
-        ScrollView sv = new ScrollView(host);
-        LinearLayout col = new LinearLayout(host);
-        col.setOrientation(LinearLayout.VERTICAL);
-
-        for (int i = 0; i < sMemCricket.size(); i++) {
-            CricketMatch cm = sMemCricket.get(i);
-            String line = "[" + cm.series + "]  " + cm.team1
-                    + (cm.score1.isEmpty() ? "" : (" " + cm.score1))
-                    + "  vs  " + cm.team2
-                    + (cm.score2.isEmpty() ? "" : (" " + cm.score2))
-                    + "   —   " + cm.status;
-            TextView row = createActionPill(host, line);
-            LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            rlp.topMargin = dp(host, 6);
-            col.addView(row, rlp);
-        }
-
-        sv.addView(col);
-        LinearLayout.LayoutParams svlp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, dp(host, 290));
-        svlp.topMargin = dp(host, 12);
-        panel.addView(sv, svlp);
-
-        TextView refreshBtn = createActionPill(host, "↻ " + I18n.s(host, "Refresh Scores", "Skorları Yenile"));
-        LinearLayout.LayoutParams rblp = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        rblp.topMargin = dp(host, 12);
-        refreshBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                fetchCricketMatches(host, true, new Runnable() {
-                    @Override
-                    public void run() {
-                        if (onUpdated != null) onUpdated.run();
-                        d.dismiss();
-                        showCricketDialog(host, onUpdated);
-                    }
-                });
-            }
-        });
-        panel.addView(refreshBtn, rblp);
-
-        presentNativeGlassDialog(host, d, panel);
-        refreshBtn.requestFocus();
     }
 
     private static void showNewsDialog(final MainActivity host, final Runnable onCycle) {

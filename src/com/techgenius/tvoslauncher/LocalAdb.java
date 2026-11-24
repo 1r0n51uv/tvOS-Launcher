@@ -222,8 +222,8 @@ final class LocalAdb {
         int p = getActiveAdbPort(c);
         if (getAdbMode(c) == ADB_MODE_PERSISTENT) {
             return I18n.s(c,
-                    "Persistent ADB Mode (Keep port " + p + " open)",
-                    "Kalıcı ADB Modu (Port " + p + " açık kalır)");
+                    "Persistent ADB Mode (Keep port %s open)",
+                    "Kalıcı ADB Modu (Port %s açık kalır)", p);
         }
         return I18n.s(c,
                 "Secure Mode — WRITE_SECURE_SETTINGS & Close ADB (Recommended)",
@@ -745,10 +745,10 @@ final class LocalAdb {
         boolean adbOn = isAdbSettingEnabled(c);
         boolean paired = isPaired(c);
         if (portReachable && paired) {
-            return I18n.s(c, "Connected & Paired (Port " + p + " Open)", "Bağlı ve Eşleşti (Port " + p + " Açık)");
+            return I18n.s(c, "Connected & Paired (Port %s Open)", "Bağlı ve Eşleşti (Port %s Açık)", p);
         }
         if (portReachable) {
-            return I18n.s(c, "Port " + p + " Open · Ready to Pair", "Port " + p + " Açık · Eşleşmeye Hazır");
+            return I18n.s(c, "Port %s Open · Ready to Pair", "Port %s Açık · Eşleşmeye Hazır", p);
         }
         if (adbOn && paired) {
             return I18n.s(c, "Paired · ADB Enabled", "Eşleşti · ADB Açık");

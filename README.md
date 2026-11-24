@@ -9,6 +9,18 @@ A fast, lightweight, tvOS 26 & macOS–inspired home screen for Android TV & Goo
 
 ---
 
+## Questo fork
+
+Fork di [techgenius1/tvOS-Launcher](https://github.com/techgenius1/tvOS-Launcher) per una TV italiana. Le differenze rispetto a upstream:
+
+- **Card Sorgenti** nella Home: Switch, PS5 e PC sulle porte HDMI 1, 2 e 3. Un tocco apre un popup con le tre sorgenti e OK porta la TV su quella porta; la card si aggiorna da sola quando una console si accende o si spegne. Le porte si cambiano in `Sources.DEVICES`, le immagini sono in `assets/sources/`.
+- **Tema stagionale** (Impostazioni → Aspetto e scene): Natale con luci che brillano e neve, automatico dal 1 dicembre al 6 gennaio oppure fisso, oppure nessuno (`Themes.java`).
+- **Calcio solo europeo**: Champions, Europa e Conference League, Nations League, Mondiali ed Europei, e i campionati e le coppe di Italia, Inghilterra, Spagna, Germania, Francia, Paesi Bassi e Portogallo. Squadra preferita di default: Napoli. ESPN non accetta più intervalli di date, quindi le partite si leggono un giorno alla volta per 7 giorni.
+- **Tolto il non occidentale**: widget Preghiere e Cricket, campionati turchi, azeri, sauditi e altri, paesi di notizie e «Più visti» fuori dall'Occidente, e le lingue turco, azero, hindi, arabo, giapponese, cinese, coreano ed ebraico.
+- **Italiano completo**: `I18nIt.java` traduce circa 850 testi che il dizionario condiviso lasciava in inglese (Impostazioni, configurazione guidata, CleanYourTV, Button Mapper, meteo, ricerca). I testi composti usano formati `%s` per poterli tradurre.
+
+---
+
 ## ✨ Highlights & Features
 
 - **Native Liquid Glass Universal Search & Home Screen Search Shortcut**

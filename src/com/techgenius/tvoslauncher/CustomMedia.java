@@ -2291,8 +2291,7 @@ public final class CustomMedia {
             }
             if (labels.size() == 1) {
                 String exts = allowIco ? ".jpg, .jpeg, .png, .ico" : ".jpg, .jpeg, .png";
-                labels.add("ℹ️  " + I18n.s(activity, "No image files (" + exts + ") in this folder",
-                        "Bu klasörde görsel dosyası (" + exts + ") bulunamadı"));
+                labels.add("ℹ️  " + I18n.s(activity, "No image files (%s) in this folder",                         "Bu klasörde görsel dosyası (%s) bulunamadı", exts));
                 actions.add(() -> showDirectoryBrowser(activity, title, currentDir, allowIco, maxW, maxH, resetLabel, onReset, callback));
             }
         }
@@ -2373,9 +2372,7 @@ public final class CustomMedia {
         } else {
             int imgCount = countImagesInFolder(currentDir);
             if (imgCount > 0) {
-                labels.add("✓  " + I18n.s(activity,
-                        "Select this folder & shuffle (" + imgCount + " images)",
-                        "Bu klasörü seç ve karıştır (" + imgCount + " görsel)"));
+                labels.add("✓  " + I18n.s(activity,                         "Select this folder & shuffle (%s images)",                         "Bu klasörü seç ve karıştır (%s görsel)", imgCount));
                 actions.add(() -> {
                     if (callback != null) callback.onFolderPicked(currentDir, imgCount);
                 });
@@ -2650,21 +2647,13 @@ public final class CustomMedia {
                 if (success) {
                     new AlertDialog.Builder(activity, android.R.style.Theme_DeviceDefault_Dialog_Alert)
                             .setTitle(I18n.s(activity, "Settings Backed Up", "Ayarlar Yedeklendi"))
-                            .setMessage(I18n.s(activity,
-                                    "Your current tvOS Launcher settings have been saved to:\n\n" + finalPath,
-                                    "Mevcut tvOS Launcher ayarlarınız şu konuma kaydedildi:\n\n" + finalPath))
+                            .setMessage(I18n.s(activity,                                     "Your current tvOS Launcher settings have been saved to:\n\n%s",                                     "Mevcut tvOS Launcher ayarlarınız şu konuma kaydedildi:\n\n%s", finalPath))
                             .setPositiveButton(I18n.s(activity, "OK", "Tamam"), null)
                             .show();
                 } else {
                     new AlertDialog.Builder(activity, android.R.style.Theme_DeviceDefault_Dialog_Alert)
                             .setTitle(I18n.s(activity, "Backup Failed", "Yedekleme Başarısız"))
-                            .setMessage(I18n.s(activity,
-                                    "Could not write to Download/" + SETTINGS_BACKUP_FILENAME
-                                            + (finalErr != null ? "\n\n" + finalErr : "")
-                                            + "\n\nPlease allow storage access and try again.",
-                                    "Download/" + SETTINGS_BACKUP_FILENAME + " dosyasına yazılamadı"
-                                            + (finalErr != null ? "\n\n" + finalErr : "")
-                                            + "\n\nLütfen depolama erişimine izin verip tekrar deneyin."))
+                            .setMessage(I18n.s(activity,                                     "Could not write to Download/%s%s\n\nPlease allow storage access and try again.",                                     "Download/%s dosyasına yazılamadı%s\n\nLütfen depolama erişimine izin verip tekrar deneyin.", SETTINGS_BACKUP_FILENAME, (finalErr != null ? "\n\n" + finalErr : "")))
                             .setPositiveButton(I18n.s(activity, "Grant Storage Access…", "Depolama İzni Ver…"), (d, w) -> {
                                 if (Build.VERSION.SDK_INT >= 30) {
                                     try {
@@ -2699,9 +2688,7 @@ public final class CustomMedia {
             File dl = resolveDownloadFolder();
             File defaultBackup = new File(dl, SETTINGS_BACKUP_FILENAME);
             if (defaultBackup.exists() && defaultBackup.isFile()) {
-                labels.add("⚡  " + I18n.s(activity,
-                        "Restore from Download/" + SETTINGS_BACKUP_FILENAME,
-                        "Download/" + SETTINGS_BACKUP_FILENAME + " dosyasından geri yükle"));
+                labels.add("⚡  " + I18n.s(activity,                         "Restore from Download/%s",                         "Download/%s dosyasından geri yükle", SETTINGS_BACKUP_FILENAME));
                 actions.add(() -> restoreSettingsFromFile(activity, defaultBackup, onRestored));
             }
             Map<String, File> roots = getStorageRoots(activity);
@@ -2728,9 +2715,7 @@ public final class CustomMedia {
         } else {
             File defaultInFolder = new File(currentDir, SETTINGS_BACKUP_FILENAME);
             if (defaultInFolder.exists() && defaultInFolder.isFile()) {
-                labels.add("✓  " + I18n.s(activity,
-                        "Restore from this folder (" + SETTINGS_BACKUP_FILENAME + ")",
-                        "Bu klasörden geri yükle (" + SETTINGS_BACKUP_FILENAME + ")"));
+                labels.add("✓  " + I18n.s(activity,                         "Restore from this folder (%s)",                         "Bu klasörden geri yükle (%s)", SETTINGS_BACKUP_FILENAME));
                 actions.add(() -> restoreSettingsFromFile(activity, defaultInFolder, onRestored));
             }
 
@@ -2820,20 +2805,14 @@ public final class CustomMedia {
                     if (onRestored != null) onRestored.run();
                     new AlertDialog.Builder(activity, android.R.style.Theme_DeviceDefault_Dialog_Alert)
                             .setTitle(I18n.s(activity, "Settings Restored", "Ayarlar Geri Yüklendi"))
-                            .setMessage(I18n.s(activity,
-                                    "Settings were successfully restored from:\n" + file.getAbsolutePath(),
-                                    "Ayarlar şu dosyadan başarıyla geri yüklendi:\n" + file.getAbsolutePath()))
+                            .setMessage(I18n.s(activity,                                     "Settings were successfully restored from:\n%s",                                     "Ayarlar şu dosyadan başarıyla geri yüklendi:\n%s", file.getAbsolutePath()))
                             .setPositiveButton(I18n.s(activity, "OK", "Tamam"), (d, w) -> activity.recreate())
                             .setOnCancelListener(d -> activity.recreate())
                             .show();
                 } else {
                     new AlertDialog.Builder(activity, android.R.style.Theme_DeviceDefault_Dialog_Alert)
                             .setTitle(I18n.s(activity, "Restore Failed", "Geri Yükleme Başarısız"))
-                            .setMessage(I18n.s(activity,
-                                    "Could not restore settings from:\n" + file.getAbsolutePath()
-                                            + (finalErr != null ? "\n\n" + finalErr : ""),
-                                    "Ayarlar şu dosyadan geri yüklenemedi:\n" + file.getAbsolutePath()
-                                            + (finalErr != null ? "\n\n" + finalErr : "")))
+                            .setMessage(I18n.s(activity,                                     "Could not restore settings from:\n%s%s",                                     "Ayarlar şu dosyadan geri yüklenemedi:\n%s%s", file.getAbsolutePath(), (finalErr != null ? "\n\n" + finalErr : "")))
                             .setPositiveButton(I18n.s(activity, "OK", "Tamam"), null)
                             .show();
                 }

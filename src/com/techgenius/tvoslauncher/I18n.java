@@ -39,10 +39,7 @@ public final class I18n {
 
     public static final String[][] LANGUAGES = {
         {LANG_EN, "English", "Use tvOS Launcher in English"},
-        {LANG_TR, "Türkçe", "tvOS Launcher'ı Türkçe kullanın"},
-        {LANG_AZ, "Azərbaycan dili", "tvOS Launcher-i Azərbaycan dilində istifadə edin"},
         {LANG_SV, "Svenska", "Använd tvOS Launcher på svenska"},
-        {LANG_HI, "हिन्दी (Indian)", "tvOS Launcher का उपयोग हिन्दी में करें"},
         {LANG_ES, "Español", "Usar tvOS Launcher en español"},
         {LANG_FR, "Français", "Utiliser tvOS Launcher en français"},
         {LANG_DE, "Deutsch", "tvOS Launcher auf Deutsch verwenden"},
@@ -50,17 +47,12 @@ public final class I18n {
         {LANG_RU, "Русский", "Использовать tvOS Launcher на русском"},
         {LANG_PT, "Português (Portugal)", "Usar o tvOS Launcher em português (Portugal)"},
         {LANG_PT_BR, "Português (Brasil)", "Usar o tvOS Launcher em português do Brasil"},
-        {LANG_PL, "Polski", "Użyj tvOS Launcher w języku polskim"},
-        {LANG_AR, "العربية", "استخدم tvOS Launcher باللغة العربية"},
-        {LANG_JA, "日本語", "tvOS Launcher を日本語で使用する"},
-        {LANG_ZH, "中文", "使用中文版 tvOS Launcher"},
-        {LANG_KO, "\ud55c\uad6d\uc5b4", "tvOS Launcher\ub97c \ud55c\uad6d\uc5b4\ub85c \uc0ac\uc6a9"},
-        {LANG_HE, "\u05e2\u05d1\u05e8\u05d9\u05ea", "\u05e9\u05d9\u05de\u05d5\u05e9 \u05d1-tvOS Launcher \u05d1\u05e2\u05d1\u05e8\u05d9\u05ea"}
+        {LANG_PL, "Polski", "Użyj tvOS Launcher w języku polskim"}
     };
 
+    /** Languages offered: Western ones only. The others' dictionaries stay but can't be picked. */
     private static final Set<String> SUPPORTED = new HashSet<>(Arrays.asList(
-            LANG_EN, LANG_TR, LANG_AZ, LANG_SV, LANG_HI, LANG_ES, LANG_FR, LANG_DE,
-            LANG_IT, LANG_RU, LANG_PT, LANG_PT_BR, LANG_PL, LANG_AR, LANG_JA, LANG_ZH, LANG_KO, LANG_HE
+            LANG_EN, LANG_SV, LANG_ES, LANG_FR, LANG_DE, LANG_IT, LANG_RU, LANG_PT, LANG_PT_BR, LANG_PL
     ));
 
     private static String cachedLang;
@@ -139,6 +131,12 @@ public final class I18n {
         // Symbolic keys for Dashboard, Control Panel, Caffeine, Alignment, Wallpaper & Inputs Overlay
         EN_MAP.put("dash_prayer_times", "Prayer Times");
         EN_MAP.put("dash_football", "Football Matches");
+        EN_MAP.put("dash_sources", "Sources");
+        EN_MAP.put("sources_all_off", "All off");
+        EN_MAP.put("sources_one_on", "1 on");
+        EN_MAP.put("sources_hint", "Press OK to switch the TV to that device");
+        EN_MAP.put("source_on", "On");
+        EN_MAP.put("source_off", "Off");
         EN_MAP.put("dash_latest_releases", "Most Watched");
         EN_MAP.put("dash_cricket", "Live Cricket Scores");
         EN_MAP.put("dash_news", "Live News");
@@ -238,6 +236,7 @@ public final class I18n {
         initAzerbaijani();
         initPolish();
         I18nHe.init(LANG_MAPS.get(LANG_HE));
+        I18nIt.init(LANG_MAPS.get(LANG_IT));
         LANG_MAPS.get(LANG_HE).put("dash_cricket", "תוצאות קריקט בשידור חי");
         LANG_MAPS.get(LANG_HE).put("dash_news", "חדשות בשידור חי");
         LANG_MAPS.get(LANG_HE).put("dash_top_media", "סרטים וסדרות מובילים");

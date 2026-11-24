@@ -713,15 +713,14 @@ public class SetupActivity extends Activity {
 
     void weather() {
         title(tr("Weather", "Hava Durumu"));
-        subtitle(tr("A small weather display on Home with a 5-day forecast (also syncs Prayer Times location).",
-                "Ana Ekranda 5 g\u00fcnl\u00fck tahminle birlikte hava durumu g\u00f6r\u00fcn\u00fcm\u00fc (Namaz Vakitleri konumunu da e\u015fitler)."));
+        subtitle(tr("A small weather display on Home with a 5-day forecast.",
+                "Ana Ekranda 5 g\u00fcnl\u00fck tahminle birlikte hava durumu g\u00f6r\u00fcn\u00fcm\u00fc."));
         LinearLayout l = list();
         String city = Weather.place(this);
         option(l, tr("Use My Location", "Konumumu Kullan"),
                 city.isEmpty() ? tr("Found from your internet connection", "\u0130nternet ba\u011flant\u0131n\u0131zdan bulunur") : tr("Looks like ", "Tahmini konum: ") + city,
                 Weather.enabled(this) && !Weather.manual(this), () -> {
                     Weather.prefs(this).edit().putBoolean(Weather.K_ENABLED, true).apply();
-                    HomeDashboard.setPrayerLocationAuto(this);
                     Weather.setPlace(this, null);
                     next();
                 });
@@ -742,7 +741,7 @@ public class SetupActivity extends Activity {
     private void searchCityDialog() {
         EditText in = new EditText(this);
         in.setSingleLine(true);
-        in.setHint(tr("City name, e.g. Istanbul", "\u015eehir ad\u0131, \u00f6rn. \u0130stanbul"));
+        in.setHint(tr("City name, e.g. Rome", "\u015eehir ad\u0131, \u00f6rn. \u0130stanbul"));
         in.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS);
         int pad = u(14);
         FrameLayout box = new FrameLayout(this);
@@ -777,7 +776,7 @@ public class SetupActivity extends Activity {
             android.widget.Toast.makeText(this,
                     res == null
                             ? tr("Couldn't search. Check the internet connection.", "Arama yap\u0131lamad\u0131. \u0130nternet ba\u011flant\u0131s\u0131n\u0131 kontrol edin.")
-                            : tr("No place found for \u201c" + q + "\u201d.", "\u201c" + q + "\u201d i\u00e7in konum bulunamad\u0131."),
+                            : tr("No place found for \u201c%s\u201d.", "\u201c%s\u201d i\u00e7in konum bulunamad\u0131.", q),
                     android.widget.Toast.LENGTH_SHORT).show();
             return;
         }
@@ -791,7 +790,6 @@ public class SetupActivity extends Activity {
                 .setItems(names, (d, w) -> {
                     Weather.Place picked = res.get(w);
                     Weather.prefs(this).edit().putBoolean(Weather.K_ENABLED, true).apply();
-                    HomeDashboard.setPrayerLocationAuto(this);
                     Weather.setPlace(this, picked);
                     Weather.refresh(this, true, null);
                     show(index, 0);

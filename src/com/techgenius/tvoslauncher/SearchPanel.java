@@ -408,7 +408,7 @@ final class SearchPanel {
         return new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
                 .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_WEB_SEARCH)
                 .putExtra(RecognizerIntent.EXTRA_LANGUAGE, langTag)
-                .putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", new String[]{isTr || I18n.isRtl(a) ? "en-US" : "hi-IN"})
+                .putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", new String[]{"en-US"})
                 .putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
                 .putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
                 .putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, a.getPackageName())
@@ -1148,7 +1148,7 @@ final class SearchPanel {
         name.setSingleLine(true);
         name.setEllipsize(TextUtils.TruncateAt.END);
         boolean have = o.installed();
-        name.setText(have ? tr("\u25b6  Open in " + o.service, "\u25b6  " + o.service + " ile A\u00e7") : tr("Get " + o.service, o.service + " \u0130ndir"));
+        name.setText(have ? tr("\u25b6  Open in %s", "\u25b6  %s ile A\u00e7", o.service) : tr("Get %s", "%s \u0130ndir", o.service));
         b.addView(name, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         TextView kind = a.text(12, Ui.font(a, "medium"), 0.7f);
         kind.setShadowLayer(0, 0, 0, 0);

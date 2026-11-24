@@ -230,6 +230,9 @@ public class MainActivity extends Activity {
     SceneHome sceneHome;
     String activeLang;
     String activeLook;
+    /** The seasonal theme Home was built with (Themes.CHRISTMAS or Themes.NONE). */
+    String activeTheme;
+    Themes.Layer themeLayer;
 
     final Runnable shelfUpdate = () -> {
         if (focusedIndex >= 0 && focusedIndex < shown.size()) {
@@ -287,6 +290,7 @@ public class MainActivity extends Activity {
         focusedIndex = Math.max(0, prefs.getInt("last_classic_idx", 0));
         activeLang = I18n.getLang(this);
         activeLook = Scenes.getLook(this);
+        activeTheme = Themes.active(this);
 
         android.graphics.Point size = Ui.screen(this);
         screenW = size.x;
@@ -464,12 +468,14 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (!I18n.getLang(this).equals(activeLang) || !Scenes.getLook(this).equals(activeLook)) {
+        if (!I18n.getLang(this).equals(activeLang) || !Scenes.getLook(this).equals(activeLook)
+                || !Themes.active(this).equals(activeTheme)) {
             recreate();
             return;
         }
         resumed = true;
         activeInstance = this;
+        if (themeLayer != null) themeLayer.setRunning(true);
         clearLaunchDim();
         boolean resumedFromBackground = wasStopped;
         wasStopped = false;
@@ -613,6 +619,7 @@ public class MainActivity extends Activity {
     protected void onPause() {
         super.onPause();
         resumed = false;
+        if (themeLayer != null) themeLayer.setRunning(false);
         if (ambientShowcase && (android.os.SystemClock.uptimeMillis() - ambientEnterTime > 1000L)) {
             exitAmbientShowcase();
         }
@@ -996,6 +1003,10 @@ public class MainActivity extends Activity {
         wlp.leftMargin = dockOuter;
         root.addView(weatherCard, wlp);
         root.addView(sceneHome.overlay, match());
+
+        // Seasonal theme over everything on Home, under the launch dim.
+        themeLayer = Themes.buildLayer(this);
+        if (themeLayer != null) root.addView(themeLayer, match());
 
         launchDimView = new View(this) {
             @Override public boolean hasOverlappingRendering() { return false; }
@@ -3390,7 +3401,7 @@ public class MainActivity extends Activity {
         } catch (ActivityNotFoundException | SecurityException e) {
             clearLaunchDim();
             if (Scenes.isScenesLook(this) && sceneHome != null) sceneHome.sceneView.start();
-            toast(I18n.s(this, "Can't open " + a.label, a.label + " açılamıyor"));
+            toast(I18n.s(this, "Can't open %s", "%s açılamıyor", a.label));
         }
     }
 
@@ -4203,8 +4214,8 @@ public class MainActivity extends Activity {
             focusIndex(Math.min(i, Math.max(0, shown.size() - 1)));
         }
         toast(toOther
-                ? I18n.s(this, a.label + " moved to Other Apps", a.label + " Diğer Uygulamalar'a taşındı")
-                : I18n.s(this, a.label + " is back on Home", a.label + " Ana Ekran'a geri döndü"));
+                ? I18n.s(this, "%s moved to Other Apps", "%s Diğer Uygulamalar'a taşındı", a.label)
+                : I18n.s(this, "%s is back on Home", "%s Ana Ekran'a geri döndü", a.label));
     }
 
     void ensureInFirstDockRow(String key) {
@@ -4253,9 +4264,9 @@ public class MainActivity extends Activity {
             focusIndex(Math.min(i, Math.max(0, shown.size() - 1)));
         }
         toast(hide
-                ? I18n.s(this, a.label + " hidden (Settings > Apps > Hidden apps)",
-                        a.label + " gizlendi (Ayarlar > Uygulamalar > Gizlenen uygulamalar)")
-                : I18n.s(this, a.label + " is back on Home", a.label + " Ana Ekran'a geri döndü"));
+                ? I18n.s(this, "%s hidden (Settings > Apps > Hidden apps)",
+                        "%s gizlendi (Ayarlar > Uygulamalar > Gizlenen uygulamalar)", a.label)
+                : I18n.s(this, "%s is back on Home", "%s Ana Ekran'a geri döndü", a.label));
     }
 
     void registerPackageReceiver() {
@@ -4695,8 +4706,10 @@ public class MainActivity extends Activity {
             long freed = Math.max(0, availMem(am) - before) / (1024 * 1024);
             updateMemoryBar();
             toast(I18n.s(this,
-                    "Closed " + apps.size() + (apps.size() == 1 ? " app" : " apps") + (freed > 0 ? " \u00b7 freed " + freed + " MB" : ""),
-                    apps.size() + " uygulama kapatıldı" + (freed > 0 ? " \u00b7 " + freed + " MB boşaltıldı" : "")));
+                    apps.size() == 1 ? (freed > 0 ? "Closed %d app \u00b7 freed %d MB" : "Closed %d app")
+                            : (freed > 0 ? "Closed %d apps \u00b7 freed %d MB" : "Closed %d apps"),
+                    freed > 0 ? "%d uygulama kapatıldı \u00b7 %d MB boşaltıldı" : "%d uygulama kapatıldı",
+                    apps.size(), freed));
         };
         if (PowerService.instance != null) {
             closeProfilePicker();
@@ -4812,7 +4825,7 @@ public class MainActivity extends Activity {
             cells.add(ccTile(panel, x, y, col, cap, Inputs.glyph(in), in.label,
                     in.disconnected ? () -> I18n.s(this, "Not connected", "Bağlı değil") : null, false, v -> {
                         closeProfilePicker();
-                        if (!Inputs.open(this, in)) toast(I18n.s(this, "Can't switch to " + in.label, in.label + " girişine geçilemiyor"));
+                        if (!Inputs.open(this, in)) toast(I18n.s(this, "Can't switch to %s", "%s girişine geçilemiyor", in.label));
                     }));
         }
         int rows = (list.size() + 1) / 2;
@@ -5872,7 +5885,7 @@ public class MainActivity extends Activity {
             del = l.size();
             l.add(I18n.s(this, "Delete", "Sil"));
             act.add(() -> new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-                    .setTitle(I18n.s(this, "Delete \u201C" + prof.name + "\u201D?", "\u201C" + prof.name + "\u201D silinsin mi?"))
+                    .setTitle(I18n.s(this, "Delete \u201C%s\u201D?", "\u201C%s\u201D silinsin mi?", prof.name))
                     .setMessage(I18n.s(this, "Its layout and Continue Watching list will be removed.", "Düzeni ve İzlemeye Devam Et listesi kaldırılacak."))
                     .setPositiveButton(I18n.s(this, "Delete", "Sil"), (d, w) -> {
                         boolean wasCurrent = Profiles.current(this).id.equals(prof.id);

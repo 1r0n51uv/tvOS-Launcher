@@ -1126,8 +1126,10 @@ public final class ControlPanelOverlay {
             long freed = Math.max(0, miAfter.availMem - before) / (1024 * 1024);
             updateMemoryBar(c);
             Toast.makeText(c, I18n.s(c,
-                    "Closed " + apps.size() + (apps.size() == 1 ? " app" : " apps") + (freed > 0 ? " · freed " + freed + " MB" : ""),
-                    apps.size() + " uygulama kapatıldı" + (freed > 0 ? " · " + freed + " MB boşaltıldı" : "")),
+                    apps.size() == 1 ? (freed > 0 ? "Closed %d app \u00b7 freed %d MB" : "Closed %d app")
+                            : (freed > 0 ? "Closed %d apps \u00b7 freed %d MB" : "Closed %d apps"),
+                    freed > 0 ? "%d uygulama kapatıldı \u00b7 %d MB boşaltıldı" : "%d uygulama kapatıldı",
+                    apps.size(), freed),
                     Toast.LENGTH_SHORT).show();
         }, 500);
     }
