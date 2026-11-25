@@ -1,0 +1,113 @@
+name: Release
+
+# Actions > Release > Run workflow on main, with the version (e.g. 2.2.6) and "publish" ticked: builds the
+# APK signed with the key the installed app trusts (secret TVOS_KEYSTORE_B64, alias "debug"), and creates
+# the tag and the GitHub release with the notes of the `## [VERSION]` section of CHANGELOG.md. The app's
+# updater (AppUpdater) reads the latest release and takes its first .apk asset. Unticked, it only builds
+# and keeps the APK as an artifact.
+# Android refuses an update signed with a different key, so the secret must be the same debug.keystore
+# the installed app was built with.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version (e.g. 2.2.6)"
+        required: true
+      publish:
+        description: "Publish: create the tag and the GitHub release (only from main). Unticked, just build."
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Resolve version
+        id: v
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          INPUT_PUBLISH: ${{ github.event.inputs.publish }}
+          REF: ${{ github.ref }}
+        run: |
+          v=${INPUT_VERSION#v}
+          [[ $v =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]] || { echo "Invalid version: $v" >&2; exit 1; }
+          # Android needs a versionCode that only grows: 2.2.6 -> 20206 (upstream's own codes stay far below).
+          code=$(( ${BASH_REMATCH[1]} * 10000 + ${BASH_REMATCH[2]} * 100 + ${BASH_REMATCH[3]} ))
+          if [ "$INPUT_PUBLISH" = true ]; then
+            [ "$REF" = refs/heads/main ] || { echo "Publishing only from main (running on $REF)." >&2; exit 1; }
+            if git ls-remote --exit-code --tags origin "refs/tags/v$v" >/dev/null; then echo "Tag v$v already exists." >&2; exit 1; fi
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+
+      - name: Release notes
+        env:
+          VERSION: ${{ steps.v.outputs.version }}
+        run: |
+          # The section of this version, without its heading.
+          awk -v v="$VERSION" '
+            $0 ~ "^## \\[" v "\\]" { on = 1; next }
+            on && /^## \[/ { exit }
+            on { print }
+          ' CHANGELOG.md | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}' > release-notes.md
+          if ! grep -q '[^[:space:]]' release-notes.md; then
+            echo "CHANGELOG.md needs a non-empty '## [$VERSION]' section." >&2
+            exit 1
+          fi
+
+      - name: Setup JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Android SDK (build-tools 34.0.0, android-34)
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "build-tools;34.0.0" "platforms;android-34" >/dev/null
+
+      - name: Signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.TVOS_KEYSTORE_B64 }}
+        run: |
+          [ -n "$KEYSTORE_B64" ] || { echo "Missing the TVOS_KEYSTORE_B64 secret (base64 of debug.keystore)." >&2; exit 1; }
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+          echo "RELEASE_KEYSTORE=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
+
+      - name: Build
+        env:
+          RELEASE_KEYSTORE_PASS: android
+          RELEASE_KEY_ALIAS: debug
+          VERSION_NAME: ${{ steps.v.outputs.version }}
+          VERSION_CODE: ${{ steps.v.outputs.code }}
+        run: ./build.sh
+
+      - name: Name the APK
+        env:
+          VERSION: ${{ steps.v.outputs.version }}
+        run: cp build/tvos-home.apk "tvOS-Launcher-v$VERSION.apk"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: tvOS-Launcher-v${{ steps.v.outputs.version }}
+          path: tvOS-Launcher-v${{ steps.v.outputs.version }}.apk
+          if-no-files-found: error
+
+      - name: Publish release
+        if: github.event.inputs.publish == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.v.outputs.version }}
+        run: |
+          gh release create "v$VERSION" "tvOS-Launcher-v$VERSION.apk" \
+            --title "tvOS Launcher v$VERSION" --notes-file release-notes.md --target "$GITHUB_SHA" --latest

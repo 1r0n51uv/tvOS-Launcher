@@ -1,0 +1,44 @@
+name: CI
+
+# Builds the APK with build.sh (plain SDK tools, no Gradle) on every pull request and on main.
+# Signed with a throwaway key: only release.yml signs with the key the installed app trusts.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Android SDK (build-tools 34.0.0, android-34)
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "build-tools;34.0.0" "platforms;android-34" >/dev/null
+
+      - name: Build
+        run: ./build.sh
+
+      - name: Check the APK
+        run: |
+          test -s build/tvos-home.apk
+          "$ANDROID_HOME/build-tools/34.0.0/aapt2" dump badging build/tvos-home.apk | head -3
