@@ -89,7 +89,7 @@ jobs:
           RELEASE_KEY_ALIAS: debug
           VERSION_NAME: ${{ steps.v.outputs.version }}
           VERSION_CODE: ${{ steps.v.outputs.code }}
-        run: ./build.sh
+        run: bash build.sh
 
       - name: Name the APK
         env:
