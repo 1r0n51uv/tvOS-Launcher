@@ -5,8 +5,8 @@ name: Release
 # the tag and the GitHub release with the notes of the `## [VERSION]` section of CHANGELOG.md. The app's
 # updater (AppUpdater) reads the latest release and takes its first .apk asset. Unticked, it only builds
 # and keeps the APK as an artifact.
-# Android refuses an update signed with a different key, so the secret must be the same debug.keystore
-# the installed app was built with.
+# Android refuses an update signed with a different key, so the secret must be the key the installed app was
+# built with (a new key means uninstalling and reinstalling the app once).
 on:
   workflow_dispatch:
     inputs:
@@ -24,6 +24,9 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    # The signing key lives in the "release" environment (Settings > Environments > release > secret
+    # TVOS_KEYSTORE_B64); a repository secret with that name works too.
+    environment: release
     timeout-minutes: 30
     steps:
       - name: Checkout
