@@ -1,0 +1,54 @@
+name: Fork sync
+
+# This repo is a fork of techgenius1/tvOS-Launcher (see FORK.md). The dojo's keeper agent opens a PR from
+# sync/vX when upstream publishes vX. When the CI of that PR finishes, this decides with fixed rules,
+# no AI: a clean sync is merged and released (Release workflow, "publish" ticked); anything else gets the
+# needs-review label and waits for the owner. The rules live in .github/scripts/fork-sync.sh.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+  # Starts the Release workflow.
+  actions: write
+
+concurrency:
+  group: fork-sync
+  cancel-in-progress: false
+
+jobs:
+  merge:
+    if: github.event.workflow_run.event == 'pull_request' && startsWith(github.event.workflow_run.head_branch, 'sync/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Merge and release a clean sync
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          UPSTREAM: techgenius1/tvOS-Launcher
+          # What the agent may change on top of the clean merge: the changelog the release notes come from.
+          ALLOWED_FILES: |
+            CHANGELOG.md
+          # file :: regex every changed line of that file must match (whole line): the Italian strings and
+          # the default version of build.sh.
+          LINE_RULES: |
+            src/com/techgenius/tvoslauncher/I18nIt.java :: \s*it\(".*", ".*"\);\s*
+            build.sh :: \s*--version-code "\$\{VERSION_CODE:-[0-9]+\}" --version-name "\$\{VERSION_NAME:-[0-9.]+\}" build/res\.zip\s*
+          VERSION_FILE: build.sh
+          VERSION_PATTERN: VERSION_NAME:-([0-9.]+)\}
+          RELEASE_WORKFLOW: release.yml
+          RELEASE_INPUTS: |
+            version={version}
+            publish=true
+        run: .github/scripts/fork-sync.sh
